@@ -129,18 +129,16 @@
 </div>
 
 <script>
-    // Firebase config
-    const firebaseConfig = {
-        apiKey: "AIzaSyCEjQP9pMuLnQtRug5ithfRapf6Ak3PF9k",
-        authDomain: "kimpitiay.firebaseapp.com",
-        databaseURL: "https://kimpitiay-default-rtdb.firebaseio.com",
-        projectId: "kimpitiay",
-        storageBucket: "kimpitiay.firebasestorage.app",
-        messagingSenderId: "707441694222",
-        appId: "1:707441694222:web:29c91b8efbf95e76f34e5f"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCEjQP9pMuLnQtRug5ithfRapf6Ak3PF9k",
+  authDomain: "kimpitiay.firebaseapp.com",
+  projectId: "kimpitiay",
+  storageBucket: "kimpitiay.firebasestorage.app",
+  messagingSenderId: "707441694222",
+  appId: "1:707441694222:web:29c91b8efbf95e76f34e5f",
+  measurementId: "G-D4FDE2N5Q4"
+};
 
     let currentUser = null, currentUserData = null, currentTheme = localStorage.getItem('kim_theme') || 'dark';
     document.body.className = `theme-${currentTheme}`;
