@@ -1020,32 +1020,90 @@ async function cancelFriendRequest(toUser) {
     }
 }
 
-    async function showFriendRequests() {
-        const snapshot = await usersRef.child(currentUser).once('value');
-        const userData = snapshot.val();
-        const requests = userData.friendRequests || [];
-        
-        let html = '';
-        if (requests.length === 0) {
-            html = '<p style="color:#94a3b8; text-align:center;">Нет запросов в друзья</p>';
-        } else {
-            for (const requester of requests) {
-                const requesterSnap = await usersRef.child(requester).once('value');
-                const requesterData = requesterSnap.val() || {};
-                html += `
-                    <div class="friend-request">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            ${renderAvatar(requesterData, requester, 40, true)}
-                            <div style="color:white; font-weight:bold;">${escapeHtml(requester)}</div>
-                        </div>
-                        <div style="display:flex; gap:8px;">
-                            <button class="action-btn accept-friend" data-user="${requester}" style="background:#2ecc71; padding:6px 12px;">✓ Принять</button>
-                            <button class="action-btn decline-friend" data-user="${requester}" style="background:#c74b4b; padding:6px 12px;">✗ Отклонить</button>
-                        </div>
+async function showFriendRequests() {
+    console.log('showFriendRequests вызвана'); // для отладки
+    
+    const snapshot = await usersRef.child(currentUser).once('value');
+    const userData = snapshot.val();
+    
+    // Получаем запросы
+    const incomingRequests = userData.incomingFriendRequests || [];
+    const sentRequests = userData.sentFriendRequests || [];
+    
+    console.log('Входящие:', incomingRequests);
+    console.log('Исходящие:', sentRequests);
+    
+    let html = '<div style="margin-bottom:20px;"><h4 style="color:white;">📨 Входящие запросы</h4></div>';
+    
+    if (incomingRequests.length === 0) {
+        html += '<p style="color:#94a3b8; margin-bottom:20px;">Нет входящих запросов</p>';
+    } else {
+        for (const requester of incomingRequests) {
+            const requesterSnap = await usersRef.child(requester).once('value');
+            const requesterData = requesterSnap.val() || {};
+            html += `
+                <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        ${renderAvatar(requesterData, requester, 40, true)}
+                        <div style="color:white; font-weight:bold;">${escapeHtml(requester)}</div>
                     </div>
-                `;
-            }
+                    <div style="display:flex; gap:8px;">
+                        <button class="accept-friend-btn" data-user="${requester}" style="background:#2ecc71; border:none; color:white; padding:6px 12px; border-radius:20px; cursor:pointer;">✓ Принять</button>
+                        <button class="decline-friend-btn" data-user="${requester}" style="background:#c74b4b; border:none; color:white; padding:6px 12px; border-radius:20px; cursor:pointer;">✗ Отклонить</button>
+                    </div>
+                </div>
+            `;
         }
+    }
+    
+    html += '<div style="margin:20px 0;"><h4 style="color:white;">📤 Отправленные запросы</h4></div>';
+    
+    if (sentRequests.length === 0) {
+        html += '<p style="color:#94a3b8;">Нет отправленных запросов</p>';
+    } else {
+        for (const sent of sentRequests) {
+            const sentSnap = await usersRef.child(sent).once('value');
+            const sentData = sentSnap.val() || {};
+            html += `
+                <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        ${renderAvatar(sentData, sent, 40, true)}
+                        <div style="color:white; font-weight:bold;">${escapeHtml(sent)}</div>
+                    </div>
+                    <button class="cancel-friend-btn" data-user="${sent}" style="background:#fbbf24; border:none; color:#0f172a; padding:6px 12px; border-radius:20px; cursor:pointer;">↩ Отменить</button>
+                </div>
+            `;
+        }
+    }
+    
+    // Вставляем HTML
+    const requestsList = document.getElementById('friend-requests-list');
+    if (requestsList) {
+        requestsList.innerHTML = html;
+    } else {
+        console.error('Элемент friend-requests-list не найден');
+        return;
+    }
+    
+    // Показываем модальное окно
+    if (friendsModal) {
+        friendsModal.classList.remove('hidden');
+    } else {
+        console.error('Модальное окно friends-modal не найдено');
+        return;
+    }
+    
+    // Добавляем обработчики
+    document.querySelectorAll('.accept-friend-btn').forEach(btn => {
+        btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.user));
+    });
+    document.querySelectorAll('.decline-friend-btn').forEach(btn => {
+        btn.addEventListener('click', () => declineFriendRequest(btn.dataset.user));
+    });
+    document.querySelectorAll('.cancel-friend-btn').forEach(btn => {
+        btn.addEventListener('click', () => cancelFriendRequest(btn.dataset.user));
+    });
+}
         
         document.getElementById('friend-requests-list').innerHTML = html;
         friendsModal.classList.remove('hidden');
