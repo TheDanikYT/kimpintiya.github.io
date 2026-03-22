@@ -1602,56 +1602,102 @@ async function showFriendRequests() {
     }
 
     // ================== ОБЩИЙ ЧАТ ==================
-    async function renderGeneralChat() {
-        if (generalMessagesListener) generalMessagesListener();
-        generalMessagesListener = null;
+async function renderGeneralChat() {
+    if (generalMessagesListener) generalMessagesListener();
+    generalMessagesListener = null;
 
-        const snapshot = await generalMessagesRef.limitToLast(50).once('value');
-        const messages = snapshot.val() || {};
-        const sorted = Object.values(messages).sort((a,b) => a.timestamp - b.timestamp);
+    const snapshot = await generalMessagesRef.limitToLast(50).once('value');
+    const messages = snapshot.val() || {};
+    const sorted = Object.values(messages).sort((a,b) => a.timestamp - b.timestamp);
 
-        let html = `<div class="messages-container" id="general-messages">`;
-        for (const msg of sorted) {
-            const senderSnap = await usersRef.child(msg.sender).once('value');
-            const senderData = senderSnap.val() || {};
-            html += renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
-        }
-        html += `</div>`;
+    let html = `<div class="messages-container" id="general-messages">`;
+    for (const msg of sorted) {
+        const senderSnap = await usersRef.child(msg.sender).once('value');
+        const senderData = senderSnap.val() || {};
+        html += renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
+    }
+    html += `</div>`;
 
-        html += `
-            <div class="input-area">
-                <input type="text" id="chat-text" placeholder="Сообщение...">
-                <div class="action-btn-group">
-                    <label for="chat-image" class="circle-btn">📷</label>
-                    <input type="file" id="chat-image" accept="image/*,image/gif" style="display:none;">
-                    <label for="chat-audio" class="circle-btn">🎵</label>
-                    <input type="file" id="chat-audio" accept="audio/*" style="display:none;">
-                    <button class="circle-btn" id="chat-record">🎙️</button>
-                    <button id="chat-send" class="circle-btn" style="background:#38bdf8;">➤</button>
-                </div>
+    html += `
+        <div class="input-area">
+            <input type="text" id="chat-text" placeholder="Сообщение...">
+            <div class="action-btn-group">
+                <label for="chat-image" class="circle-btn">📷</label>
+                <input type="file" id="chat-image" accept="image/*,image/gif" style="display:none;">
+                <label for="chat-audio" class="circle-btn">🎵</label>
+                <input type="file" id="chat-audio" accept="audio/*" style="display:none;">
+                <button class="circle-btn" id="chat-record">🎙️</button>
+                <button class="circle-btn" id="chat-game">🎮</button>
+                <button class="circle-btn" id="chat-call">📞</button>
+                <button id="chat-send" class="circle-btn" style="background:#38bdf8;">➤</button>
             </div>
-        `;
-        dynamicContent.innerHTML = html;
+        </div>
+    `;
+    dynamicContent.innerHTML = html;
 
-        document.getElementById('chat-image').addEventListener('change', (e) => handleGeneralFile(e));
-        document.getElementById('chat-audio').addEventListener('change', (e) => handleGeneralFile(e));
+    // Обработчики событий
+    document.getElementById('chat-image').addEventListener('change', (e) => handleGeneralFile(e));
+    document.getElementById('chat-audio').addEventListener('change', (e) => handleGeneralFile(e));
 
-        const recordBtn = document.getElementById('chat-record');
+    const recordBtn = document.getElementById('chat-record');
+    if (recordBtn) {
         recordBtn.addEventListener('mousedown', startGeneralRecording);
         recordBtn.addEventListener('mouseup', stopGeneralRecording);
         recordBtn.addEventListener('touchend', stopGeneralRecording);
+    }
 
-        document.getElementById('chat-game').addEventListener('click', () => {
-            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕ
-			const msg = { sender: currentUser, timestamp: Date.now(), gameInvite: true, gameId };
-				generalMessagesRef.push(msg);
-				gamesRef.child(gameId).set({
-				board: ['','','','','','','','',''],
-				turn: 'X',
-				players: [currentUser, null],
-				status: 'waiting',
-				currentPlayer: currentUser
+    const gameBtn = document.getElementById('chat-game');
+    if (gameBtn) {
+        gameBtn.addEventListener('click', () => {
+            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+            const msg = { sender: currentUser, timestamp: Date.now(), gameInvite: true, gameId };
+            generalMessagesRef.push(msg);
+            gamesRef.child(gameId).set({
+                board: ['','','','','','','','',''],
+                turn: 'X',
+                players: [currentUser, null],
+                status: 'waiting',
+                currentPlayer: currentUser
+            });
+            renderGeneralChat();
+        });
+    }
+
+    const callBtn = document.getElementById('chat-call');
+    if (callBtn) {
+        callBtn.addEventListener('click', async () => {
+            const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+            const msg = { sender: currentUser, timestamp: Date.now(), callInvite: true, callId };
+            await generalMessagesRef.push(msg);
+            await startCall(callId, null);
+        });
+    }
+
+    const sendBtn = document.getElementById('chat-send');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', () => {
+            const input = document.getElementById('chat-text');
+            const text = input.value.trim();
+            if (!text) return;
+            generalMessagesRef.push({ sender: currentUser, text, timestamp: Date.now() });
+            input.value = '';
+        });
+    }
+
+    generalMessagesListener = generalMessagesRef.limitToLast(1).on('child_added', async (snapshot) => {
+        if (activeTab === 'chat' && document.getElementById('general-messages')) {
+            const msg = snapshot.val();
+            const senderSnap = await usersRef.child(msg.sender).once('value');
+            const senderData = senderSnap.val() || {};
+            const container = document.getElementById('general-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.innerHTML = renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
     });
+}
+
     renderGeneralChat();
 });
         document.getElementById('chat-call').addEventListener('click', async () => {
