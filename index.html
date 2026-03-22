@@ -863,62 +863,162 @@
     }
 
     // ================== ЗАПРОСЫ В ДРУЗЬЯ ==================
-    async function sendFriendRequest(toUser) {
-        if (toUser === currentUser) return;
-        
-        const toUserSnap = await usersRef.child(toUser).once('value');
-        const toUserData = toUserSnap.val();
-        if (!toUserData) return;
-        
-        const requests = toUserData.friendRequests || [];
-        if (requests.includes(currentUser)) {
-            alert('Запрос уже отправлен');
-            return;
-        }
-        
-        await usersRef.child(toUser).child('friendRequests').push(currentUser);
-        await addNotification(toUser, { type: 'friend', text: `${currentUser} хочет добавить вас в друзья!` });
-        alert('Запрос отправлен');
+async function sendFriendRequest(toUser) {
+    if (toUser === currentUser) {
+        alert('Нельзя добавить себя в друзья');
+        return;
     }
+    
+    const currentFriends = currentUserData.friends || [];
+    if (currentFriends.includes(toUser)) {
+        alert('Этот пользователь уже у вас в друзьях');
+        return;
+    }
+    
+    const existingRequests = currentUserData.sentFriendRequests || [];
+    if (existingRequests.includes(toUser)) {
+        alert('Запрос уже отправлен');
+        return;
+    }
+    
+    const toUserSnap = await usersRef.child(toUser).once('value');
+    const toUserData = toUserSnap.val();
+    if (!toUserData) {
+        alert('Пользователь не найден');
+        return;
+    }
+    
+    const incomingRequests = toUserData.incomingFriendRequests || [];
+    if (incomingRequests.includes(currentUser)) {
+        alert('Запрос уже существует');
+        return;
+    }
+    incomingRequests.push(currentUser);
+    await usersRef.child(toUser).child('incomingFriendRequests').set(incomingRequests);
+    
+    const sentRequests = currentUserData.sentFriendRequests || [];
+    sentRequests.push(toUser);
+    await usersRef.child(currentUser).child('sentFriendRequests').set(sentRequests);
+    currentUserData.sentFriendRequests = sentRequests;
+    
+    await addNotification(toUser, { type: 'friend', text: `${currentUser} хочет добавить вас в друзья!` });
+    
+    alert(`Запрос в друзья отправлен пользователю ${toUser}`);
+    
+    if (viewingProfile === toUser) {
+        renderProfile(toUser, false);
+    }
+}
 
-    async function acceptFriendRequest(fromUser) {
-        const currentUserSnap = await usersRef.child(currentUser).once('value');
-        const userData = currentUserSnap.val();
-        const requests = userData.friendRequests || [];
-        
-        if (!requests.includes(fromUser)) return;
-        
-        // Добавляем в друзья обоим
-        await usersRef.child(currentUser).child('friends').transaction(arr => {
-            if (!arr) arr = [];
-            if (!arr.includes(fromUser)) arr.push(fromUser);
-            return arr;
-        });
-        await usersRef.child(fromUser).child('friends').transaction(arr => {
-            if (!arr) arr = [];
-            if (!arr.includes(currentUser)) arr.push(currentUser);
-            return arr;
-        });
-        
-        // Удаляем запрос
-        const newRequests = requests.filter(r => r !== fromUser);
-        await usersRef.child(currentUser).child('friendRequests').set(newRequests);
-        
-        await addNotification(fromUser, { type: 'friend', text: `${currentUser} принял запрос в друзья!` });
-        alert(`Вы теперь друзья с ${fromUser}`);
-        renderSettings();
+async function acceptFriendRequest(fromUser) {
+    const currentSnap = await usersRef.child(currentUser).once('value');
+    const currentData = currentSnap.val();
+    
+    const fromSnap = await usersRef.child(fromUser).once('value');
+    const fromData = fromSnap.val();
+    
+    if (!currentData || !fromData) return;
+    
+    const incoming = currentData.incomingFriendRequests || [];
+    const newIncoming = incoming.filter(u => u !== fromUser);
+    await usersRef.child(currentUser).child('incomingFriendRequests').set(newIncoming);
+    
+    const sentFrom = fromData.sentFriendRequests || [];
+    const newSentFrom = sentFrom.filter(u => u !== currentUser);
+    await usersRef.child(fromUser).child('sentFriendRequests').set(newSentFrom);
+    
+    const currentFriends = currentData.friends || [];
+    if (!currentFriends.includes(fromUser)) {
+        currentFriends.push(fromUser);
+        await usersRef.child(currentUser).child('friends').set(currentFriends);
     }
+    
+    const fromFriends = fromData.friends || [];
+    if (!fromFriends.includes(currentUser)) {
+        fromFriends.push(currentUser);
+        await usersRef.child(fromUser).child('friends').set(fromFriends);
+    }
+    
+    currentUserData.friends = currentFriends;
+    currentUserData.incomingFriendRequests = newIncoming;
+    
+    await addNotification(fromUser, { type: 'friend', text: `${currentUser} принял ваш запрос в друзья!` });
+    
+    alert(`Вы теперь друзья с ${fromUser}`);
+    
+    if (viewingProfile === fromUser) {
+        renderProfile(fromUser, false);
+    }
+    renderSettings();
+}
 
-    async function declineFriendRequest(fromUser) {
-        const currentUserSnap = await usersRef.child(currentUser).once('value');
-        const userData = currentUserSnap.val();
-        const requests = userData.friendRequests || [];
-        
-        const newRequests = requests.filter(r => r !== fromUser);
-        await usersRef.child(currentUser).child('friendRequests').set(newRequests);
-        alert(`Запрос от ${fromUser} отклонён`);
-        renderSettings();
+async function declineFriendRequest(fromUser) {
+    const currentSnap = await usersRef.child(currentUser).once('value');
+    const currentData = currentSnap.val();
+    
+    const incoming = currentData.incomingFriendRequests || [];
+    const newIncoming = incoming.filter(u => u !== fromUser);
+    await usersRef.child(currentUser).child('incomingFriendRequests').set(newIncoming);
+    
+    const fromSnap = await usersRef.child(fromUser).once('value');
+    const fromData = fromSnap.val();
+    if (fromData) {
+        const sentFrom = fromData.sentFriendRequests || [];
+        const newSentFrom = sentFrom.filter(u => u !== currentUser);
+        await usersRef.child(fromUser).child('sentFriendRequests').set(newSentFrom);
     }
+    
+    currentUserData.incomingFriendRequests = newIncoming;
+    
+    alert(`Запрос от ${fromUser} отклонён`);
+    renderSettings();
+}
+
+async function cancelFriendRequest(toUser) {
+    const sentRequests = currentUserData.sentFriendRequests || [];
+    if (!sentRequests.includes(toUser)) return;
+    
+    const newSent = sentRequests.filter(u => u !== toUser);
+    await usersRef.child(currentUser).child('sentFriendRequests').set(newSent);
+    currentUserData.sentFriendRequests = newSent;
+    
+    const toSnap = await usersRef.child(toUser).once('value');
+    const toData = toSnap.val();
+    if (toData) {
+        const incoming = toData.incomingFriendRequests || [];
+        const newIncoming = incoming.filter(u => u !== currentUser);
+        await usersRef.child(toUser).child('incomingFriendRequests').set(newIncoming);
+    }
+	
+	async function removeFriend(friendName) {
+    if (!confirm(`Удалить ${friendName} из друзей?`)) return;
+    
+    const currentFriends = currentUserData.friends || [];
+    const newCurrentFriends = currentFriends.filter(f => f !== friendName);
+    await usersRef.child(currentUser).child('friends').set(newCurrentFriends);
+    currentUserData.friends = newCurrentFriends;
+    
+    const friendSnap = await usersRef.child(friendName).once('value');
+    const friendData = friendSnap.val();
+    if (friendData) {
+        const friendFriends = friendData.friends || [];
+        const newFriendFriends = friendFriends.filter(f => f !== currentUser);
+        await usersRef.child(friendName).child('friends').set(newFriendFriends);
+    }
+    
+    alert(`${friendName} удалён из друзей`);
+    
+    if (viewingProfile === friendName) {
+        renderProfile(friendName, false);
+    }
+}
+    
+    alert(`Запрос к ${toUser} отменён`);
+    
+    if (viewingProfile === toUser) {
+        renderProfile(toUser, false);
+    }
+}
 
     async function showFriendRequests() {
         const snapshot = await usersRef.child(currentUser).once('value');
