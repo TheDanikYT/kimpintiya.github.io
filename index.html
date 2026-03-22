@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Кимпиньтяо</title>
-    <!-- Firebase SDK (compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -18,15 +21,50 @@
             align-items: center;
             justify-content: center;
             padding: 6px;
-            transition: background 0.3s;
+            transition: all 0.3s;
         }
 
         body.theme-dark { background: #0f172a; }
         body.theme-dark .app-container { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
         body.theme-light { background: #e2e8f0; }
-        body.theme-light .app-container { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.1); }
+        body.theme-light .app-container { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.1); }
+        body.theme-light .message { background: rgba(0, 0, 0, 0.05); color: #1e293b; }
+        body.theme-light .message.out { background: linear-gradient(145deg, #38bdf8, #0284c7); color: white; }
+        
         body.theme-gradient { background: linear-gradient(145deg, #1e293b, #0f172a); }
         body.theme-gradient .app-container { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid #475569; }
+        
+        body.theme-cyberpunk {
+            background: linear-gradient(45deg, #ff0066, #00ffcc, #ff00ff, #00ccff);
+            background-size: 400% 400%;
+            animation: gradientShift 5s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body.theme-cyberpunk .app-container {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(30px);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            animation: borderPulse 2s ease-in-out infinite;
+        }
+        @keyframes borderPulse {
+            0%, 100% { border-color: rgba(0, 255, 255, 0.5); box-shadow: 0 0 30px rgba(0, 255, 255, 0.3); }
+            50% { border-color: rgba(255, 0, 255, 0.8); box-shadow: 0 0 50px rgba(255, 0, 255, 0.5); }
+        }
+        body.theme-cyberpunk .message {
+            background: rgba(0, 255, 255, 0.2);
+            border: 1px solid #0ff;
+            backdrop-filter: blur(10px);
+        }
+        body.theme-cyberpunk .message.out {
+            background: linear-gradient(135deg, #ff0066, #ff00cc);
+            border: 1px solid #ff00ff;
+        }
 
         .app-container {
             width: 100%;
@@ -39,7 +77,6 @@
             flex-direction: column;
         }
 
-        /* Экран входа */
         .auth-screen {
             height: 100%;
             display: flex;
@@ -108,7 +145,6 @@
             text-align: center;
         }
 
-        /* Основной интерфейс */
         .chat-app {
             height: 100%;
             display: flex;
@@ -141,6 +177,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            cursor: pointer;
         }
         .verified-badge {
             background: #38bdf8;
@@ -152,13 +189,6 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-left: 4px;
-        }
-        .online-dot {
-            width: 8px;
-            height: 8px;
-            background: #2ecc71;
-            border-radius: 50%;
             margin-left: 4px;
         }
         .icon-btn {
@@ -178,7 +208,6 @@
             flex-shrink: 0;
             position: relative;
         }
-        .icon-btn:active { background: rgba(255,255,255,0.2); }
         .badge {
             position: absolute;
             top: -5px;
@@ -195,7 +224,6 @@
             border: 2px solid #1e293b;
         }
 
-        /* Табы */
         .tabs {
             display: flex;
             background: rgba(0,0,0,0.3);
@@ -218,7 +246,6 @@
             color: #38bdf8;
         }
 
-        /* Контейнер контента */
         .tab-content {
             flex: 1;
             overflow-y: auto;
@@ -229,7 +256,6 @@
             scrollbar-width: thin;
         }
 
-        /* Сообщения */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -246,11 +272,20 @@
             border: 1px solid rgba(255,255,255,0.1);
             color: #f1f5f9;
             align-self: flex-start;
-            animation: fade 0.2s;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
         }
         .message.out {
             align-self: flex-end;
             background: linear-gradient(145deg, #38bdf8, #0284c7);
+        }
+        .message-avatar {
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .message-content {
+            flex: 1;
         }
         .message .sender {
             font-size: 0.75rem;
@@ -292,7 +327,6 @@
             cursor: pointer;
         }
 
-        /* Панель ввода */
         .input-area {
             display: flex;
             gap: 6px;
@@ -335,8 +369,7 @@
             flex-shrink: 0;
             cursor: pointer;
         }
-        .circle-btn:active { background: rgba(255,255,255,0.2); }
-        #send-btn, #pm-send, #chat-send {
+        #pm-send, #chat-send {
             background: linear-gradient(145deg, #38bdf8, #0284c7);
             width: 44px;
             height: 44px;
@@ -348,12 +381,7 @@
             flex-shrink: 0;
             cursor: pointer;
         }
-        #send-btn:active, #pm-send:active, #chat-send:active {
-            transform: translateY(4px);
-            box-shadow: 0 1px 0 #0c4a6e;
-        }
 
-        /* Профили, посты */
         .profile-card, .post-card, .settings-card {
             background: rgba(255,255,255,0.07);
             backdrop-filter: blur(10px);
@@ -361,17 +389,25 @@
             padding: 20px;
             border: 1px solid rgba(255,255,255,0.1);
         }
-        /* Рамки аватарки */
+        
         .avatar-wrapper {
             position: relative;
             display: inline-block;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #334155;
+        }
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
         .avatar-large {
             width: 90px;
             height: 90px;
             border-radius: 50%;
             object-fit: cover;
-            cursor: pointer;
         }
         .avatar-placeholder {
             width: 90px;
@@ -383,12 +419,21 @@
             justify-content: center;
             font-size: 2.8rem;
             color: white;
-            cursor: pointer;
         }
-        .frame-1 { border: 4px solid #fbbf24; box-shadow: 0 0 0 4px #f59e0b; }
-        .frame-2 { border: 4px solid #a78bfa; box-shadow: 0 0 0 4px #8b5cf6; }
-        .frame-3 { border: 4px solid #ec489a; box-shadow: 0 0 0 4px #db2777; }
-        .frame-4 { border: 4px solid #14b8a6; box-shadow: 0 0 0 4px #0d9488, 0 0 0 8px #2dd4bf; }
+        
+        .frame-10min { border: 4px solid #fbbf24; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.5); border-radius: 50%; }
+        .frame-100h { border: 4px solid #a78bfa; box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.5); border-radius: 50%; }
+        .frame-500h { border: 4px solid #ec489a; box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.5); border-radius: 50%; animation: framePulse 2s ease-in-out infinite; }
+        .frame-1000h { border: 4px solid #14b8a6; box-shadow: 0 0 0 3px #0d9488, 0 0 0 6px #2dd4bf; border-radius: 50%; animation: frameGlow 1.5s ease-in-out infinite; }
+        @keyframes framePulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(236, 72, 153, 0.8); }
+        }
+        @keyframes frameGlow {
+            0%, 100% { box-shadow: 0 0 0 3px #0d9488, 0 0 0 6px #2dd4bf; }
+            50% { box-shadow: 0 0 0 5px #0d9488, 0 0 0 10px #2dd4bf; }
+        }
+        
         .profile-banner {
             width: 100%;
             height: 150px;
@@ -403,9 +448,11 @@
             color: white;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
+            margin-top: 12px;
         }
-        .profile-bio { color: #cbd5e1; }
+        .profile-bio { color: #cbd5e1; text-align: center; margin: 8px 0; }
         .stat-value { font-size: 1.4rem; color: #38bdf8; }
         .action-btn {
             background: rgba(255,255,255,0.1);
@@ -415,47 +462,14 @@
             border-radius: 40px;
             cursor: pointer;
             margin: 4px;
+            font-size: 0.9rem;
         }
-        .action-btn:active { background: rgba(255,255,255,0.2); }
         .admin-btn {
             background: #fbbf24;
             color: #0f172a;
             border: none;
         }
 
-        /* Комментарии */
-        .comment {
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 8px 12px;
-            margin-top: 8px;
-            font-size: 0.9rem;
-        }
-        .comment-author {
-            font-weight: 600;
-            color: #38bdf8;
-        }
-        .comment-text {
-            color: #e2e8f0;
-        }
-        .comment-time {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            margin-left: 8px;
-        }
-        .comments-section {
-            margin-top: 12px;
-        }
-        .toggle-comments {
-            background: none;
-            border: none;
-            color: #38bdf8;
-            cursor: pointer;
-            font-size: 0.9rem;
-            padding: 4px 0;
-        }
-
-        /* Диалоги */
         .dialog-item {
             display: flex;
             align-items: center;
@@ -467,7 +481,6 @@
             cursor: pointer;
         }
 
-        /* Поиск */
         .search-bar {
             display: flex;
             gap: 8px;
@@ -482,14 +495,12 @@
             color: white;
         }
 
-        /* Хештеги */
         .hashtag {
             color: #38bdf8;
             font-weight: 600;
         }
 
-        /* Модалки */
-        .game-modal, .call-modal, .notifications-modal {
+        .game-modal, .call-modal, .notifications-modal, .frame-modal, .friends-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9);
@@ -500,7 +511,7 @@
             z-index: 2000;
             padding: 20px;
         }
-        .game-card, .notifications-card {
+        .game-card, .notifications-card, .frame-card, .friends-card {
             background: rgba(255,255,255,0.1);
             border-radius: 48px;
             padding: 25px;
@@ -527,24 +538,51 @@
             border: 2px solid rgba(255,255,255,0.2);
             cursor: pointer;
         }
+        .frame-option {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            text-align: center;
+        }
+        .frame-option.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .friend-request {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 12px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .privacy-option {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .privacy-option.active {
+            background: rgba(56, 189, 248, 0.3);
+            border: 1px solid #38bdf8;
+        }
         .hidden { display: none !important; }
 
         @media (max-width: 400px) {
             .app-name { font-size: 1.5rem; }
             .circle-btn { width: 38px; height: 38px; font-size: 1.3rem; }
-            #send-btn, #pm-send, #chat-send { width: 42px; height: 42px; font-size: 1.3rem; }
-            .input-area input { font-size: 0.85rem; padding: 10px 12px; }
-            .action-btn-group { gap: 2px; }
-        }
-        @media (max-width: 340px) {
-            .input-area { flex-direction: column; align-items: stretch; }
-            .action-btn-group { justify-content: center; }
         }
     </style>
 </head>
 <body class="theme-dark">
 <div class="app-container">
-    <!-- Экран входа -->
     <div id="auth-screen" class="auth-screen">
         <div class="auth-box">
             <h1>Кимпиньтяо</h1>
@@ -559,15 +597,11 @@
         </div>
     </div>
 
-    <!-- Главное приложение -->
     <div id="chat-app" class="chat-app hidden">
         <div class="chat-header">
             <span class="app-name">Кимпиньтяо</span>
             <span class="current-user" id="current-user-display"></span>
-            <button class="icon-btn" id="notifications-btn" title="Уведомления">
-                🔔
-                <span id="notifications-badge" class="badge hidden">0</span>
-            </button>
+            <button class="icon-btn" id="notifications-btn" title="Уведомления">🔔<span id="notifications-badge" class="badge hidden">0</span></button>
             <button class="icon-btn" id="logout-btn" title="Выйти">↪</button>
         </div>
 
@@ -582,14 +616,13 @@
         </div>
     </div>
 
-    <!-- Модалки -->
     <div id="game-modal" class="game-modal hidden">
         <div class="game-card">
             <div style="display:flex; justify-content:space-between;">
                 <span style="color:white; font-size:2rem;">🎮</span>
                 <button class="icon-btn" id="close-game" style="width:40px;height:40px;">✕</button>
             </div>
-            <div id="game-status" class="game-status" style="color:white; text-align:center; margin:15px 0;">Крестики-нолики</div>
+            <div id="game-status" style="color:white; text-align:center; margin:15px 0;">Крестики-нолики</div>
             <div class="game-board" id="game-board"></div>
             <button class="action-btn" id="reset-game" style="width:100%;">Новая игра</button>
         </div>
@@ -624,25 +657,43 @@
             <div id="notifications-list" style="color:white;"></div>
         </div>
     </div>
+
+    <div id="frame-modal" class="frame-modal hidden">
+        <div class="frame-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span style="color:white; font-size:1.5rem;">🖼️ Выбор рамки</span>
+                <button class="icon-btn" id="close-frame-modal" style="width:40px;height:40px;">✕</button>
+            </div>
+            <div id="frame-options"></div>
+        </div>
+    </div>
+
+    <div id="friends-modal" class="friends-modal hidden">
+        <div class="friends-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span style="color:white; font-size:1.5rem;">👥 Запросы в друзья</span>
+                <button class="icon-btn" id="close-friends-modal" style="width:40px;height:40px;">✕</button>
+            </div>
+            <div id="friend-requests-list"></div>
+        </div>
+    </div>
 </div>
 
 <script>
     // ================== НАСТРОЙКИ FIREBASE ==================
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCEjQP9pMuLnQtRug5ithfRapf6Ak3PF9k",
-  authDomain: "kimpitiay.firebaseapp.com",
-  projectId: "kimpitiay",
-  storageBucket: "kimpitiay.firebasestorage.app",
-  messagingSenderId: "707441694222",
-  appId: "1:707441694222:web:29c91b8efbf95e76f34e5f",
-  measurementId: "G-D4FDE2N5Q4"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyCEjQP9pMuLnQtRug5ithfRapf6Ak3PF9k",
+        authDomain: "kimpitiay.firebaseapp.com",
+        databaseURL: "https://kimpitiay-default-rtdb.firebaseio.com",
+        projectId: "kimpitiay",
+        storageBucket: "kimpitiay.firebasestorage.app",
+        messagingSenderId: "707441694222",
+        appId: "1:707441694222:web:29c91b8efbf95e76f34e5f"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Переменные
     let firebaseAvailable = false;
     const connectedRef = db.ref('.info/connected');
     connectedRef.on('value', (snap) => {
@@ -657,13 +708,11 @@ const firebaseConfig = {
         }
     });
 
-    // Глобальные переменные
     let currentUser = null;
     let currentUserData = null;
     let currentTheme = localStorage.getItem('kim_theme') || 'dark';
     document.body.className = `theme-${currentTheme}`;
 
-    // Ссылки на узлы
     const usersRef = db.ref('users');
     const postsRef = db.ref('posts');
     const dialogsRef = db.ref('dialogs');
@@ -673,7 +722,6 @@ const firebaseConfig = {
     const callsRef = db.ref('calls');
     const gamesRef = db.ref('games');
 
-    // DOM элементы
     const authScreen = document.getElementById('auth-screen');
     const chatApp = document.getElementById('chat-app');
     const loginUsername = document.getElementById('login-username');
@@ -690,27 +738,48 @@ const firebaseConfig = {
     const notificationsList = document.getElementById('notifications-list');
     const dynamicContent = document.getElementById('dynamic-content');
     const tabs = document.querySelectorAll('.tab');
+    const frameModal = document.getElementById('frame-modal');
+    const closeFrameModal = document.getElementById('close-frame-modal');
+    const friendsModal = document.getElementById('friends-modal');
+    const closeFriendsModal = document.getElementById('close-friends-modal');
 
     let activeTab = 'dialogs';
     let viewingProfile = null;
     let currentDialog = null;
-    let selectedChatFile = null;
     let mediaRecorder = null, recordedChunks = [], recording = false;
     let localStream = null;
-    let remoteStream = null;
     let peerConnection = null;
     let currentCallId = null;
-
-    const gameModal = document.getElementById('game-modal');
-    const callModal = document.getElementById('call-modal');
+    let pmMessagesListener = null;
+    let generalMessagesListener = null;
+    let feedListener = null;
     let currentGameId = null;
-    let gameListener = null;
+    let currentGameListener = null;
+    let onlineStartTime = null;
+
+    // ================== КУКИ ==================
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+    }
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+    function deleteCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+    }
 
     // ================== ВСПОМОГАТЕЛЬНЫЕ ==================
     function escapeHtml(unsafe) {
         if (!unsafe) return '';
-        return unsafe.replace(/[&<>"]/g, m => {
-            if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; if(m === '"') return '&quot;';
+        return unsafe.replace(/[&<>]/g, m => {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
             return m;
         });
     }
@@ -722,53 +791,180 @@ const firebaseConfig = {
         return new Date(timestamp).toLocaleDateString();
     }
 
-    function renderAvatar(username, size = 40, isSmall = true) {
-        const frameClass = getAvatarFrameClass(username);
-        return `<div class="avatar-wrapper" style="width:${size}px; height:${size}px; border-radius:50%; overflow:hidden; ${frameClass ? `border: 3px solid ${frameClass.borderColor}; box-shadow: ${frameClass.boxShadow}` : ''}">
-                    <div style="width:100%; height:100%; background:linear-gradient(145deg,#475569,#1e293b); display:flex; align-items:center; justify-content:center; color:white; font-size:${size*0.4}px;">${username.charAt(0).toUpperCase()}</div>
-                </div>`;
+    function getUserFrameClass(userData) {
+        if (!userData || !userData.currentFrame) return '';
+        const frames = {
+            '10min': 'frame-10min',
+            '100h': 'frame-100h',
+            '500h': 'frame-500h',
+            '1000h': 'frame-1000h'
+        };
+        return frames[userData.currentFrame] || '';
     }
 
-    function getAvatarFrameClass(username) {
-        if (!currentUserData) return null;
-        const frames = currentUserData.unlockedFrames || [];
-        const currentFrame = currentUserData.currentFrame;
-        if (currentFrame && frames.includes(currentFrame)) {
-            const colors = {
-                1: { borderColor: '#fbbf24', boxShadow: '0 0 0 3px #f59e0b' },
-                2: { borderColor: '#a78bfa', boxShadow: '0 0 0 3px #8b5cf6' },
-                3: { borderColor: '#ec489a', boxShadow: '0 0 0 3px #db2777' },
-                4: { borderColor: '#14b8a6', boxShadow: '0 0 0 3px #0d9488, 0 0 0 6px #2dd4bf' }
-            };
-            return colors[currentFrame];
+    function renderAvatar(userData, username, size = 40, isClickable = true) {
+        const frameClass = getUserFrameClass(userData);
+        const clickAttr = isClickable ? `onclick="event.stopPropagation(); openUserProfile('${username}')"` : '';
+        return `
+            <div class="avatar-wrapper ${frameClass}" style="width:${size}px; height:${size}px; cursor:pointer;" ${clickAttr}>
+                ${userData?.avatar ? 
+                    `<img src="${userData.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : 
+                    `<div style="width:100%; height:100%; background:linear-gradient(145deg,#475569,#1e293b); display:flex; align-items:center; justify-content:center; color:white; font-size:${size*0.4}px;">${username.charAt(0).toUpperCase()}</div>`
+                }
+            </div>
+        `;
+    }
+
+    function openUserProfile(username) {
+        if (username === currentUser) {
+            activeTab = 'profile';
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('[data-tab="profile"]').classList.add('active');
+            renderProfile(currentUser, true);
+        } else {
+            viewingProfile = username;
+            renderProfile(username, false);
         }
-        return null;
     }
-
-    function renderDisplayName(username) {
-        return `<span>${escapeHtml(username)}${currentUserData && currentUserData.verified ? '<span class="verified-badge">✓</span>' : ''}</span>`;
-    }
+    window.openUserProfile = openUserProfile;
 
     function checkFirebaseOrShowError() {
         if (!firebaseAvailable) {
-            alert('Нет подключения к Firebase. Проверьте интернет.');
+            alert('Нет подключения к Firebase');
             return false;
         }
         return true;
     }
 
-    // ================== ОТСЛЕЖИВАНИЕ ВРЕМЕНИ ОНЛАЙН ==================
-    let onlineStartTime = null;
+    // ================== ПРОВЕРКА ПРАВ НА ОТПРАВКУ СООБЩЕНИЯ ==================
+    async function canSendMessage(toUser) {
+        const toUserSnap = await usersRef.child(toUser).once('value');
+        const toUserData = toUserSnap.val();
+        if (!toUserData) return false;
+        
+        const privacy = toUserData.privacySetting || 'all';
+        
+        if (privacy === 'all') return true;
+        
+        const friends = toUserData.friends || [];
+        const followers = toUserData.followers || [];
+        const following = toUserData.following || [];
+        
+        switch(privacy) {
+            case 'friends':
+                return friends.includes(currentUser);
+            case 'mutual':
+                return friends.includes(currentUser) && following.includes(toUser);
+            case 'followers':
+                return followers.includes(currentUser);
+            default:
+                return true;
+        }
+    }
+
+    // ================== ЗАПРОСЫ В ДРУЗЬЯ ==================
+    async function sendFriendRequest(toUser) {
+        if (toUser === currentUser) return;
+        
+        const toUserSnap = await usersRef.child(toUser).once('value');
+        const toUserData = toUserSnap.val();
+        if (!toUserData) return;
+        
+        const requests = toUserData.friendRequests || [];
+        if (requests.includes(currentUser)) {
+            alert('Запрос уже отправлен');
+            return;
+        }
+        
+        await usersRef.child(toUser).child('friendRequests').push(currentUser);
+        await addNotification(toUser, { type: 'friend', text: `${currentUser} хочет добавить вас в друзья!` });
+        alert('Запрос отправлен');
+    }
+
+    async function acceptFriendRequest(fromUser) {
+        const currentUserSnap = await usersRef.child(currentUser).once('value');
+        const userData = currentUserSnap.val();
+        const requests = userData.friendRequests || [];
+        
+        if (!requests.includes(fromUser)) return;
+        
+        // Добавляем в друзья обоим
+        await usersRef.child(currentUser).child('friends').transaction(arr => {
+            if (!arr) arr = [];
+            if (!arr.includes(fromUser)) arr.push(fromUser);
+            return arr;
+        });
+        await usersRef.child(fromUser).child('friends').transaction(arr => {
+            if (!arr) arr = [];
+            if (!arr.includes(currentUser)) arr.push(currentUser);
+            return arr;
+        });
+        
+        // Удаляем запрос
+        const newRequests = requests.filter(r => r !== fromUser);
+        await usersRef.child(currentUser).child('friendRequests').set(newRequests);
+        
+        await addNotification(fromUser, { type: 'friend', text: `${currentUser} принял запрос в друзья!` });
+        alert(`Вы теперь друзья с ${fromUser}`);
+        renderSettings();
+    }
+
+    async function declineFriendRequest(fromUser) {
+        const currentUserSnap = await usersRef.child(currentUser).once('value');
+        const userData = currentUserSnap.val();
+        const requests = userData.friendRequests || [];
+        
+        const newRequests = requests.filter(r => r !== fromUser);
+        await usersRef.child(currentUser).child('friendRequests').set(newRequests);
+        alert(`Запрос от ${fromUser} отклонён`);
+        renderSettings();
+    }
+
+    async function showFriendRequests() {
+        const snapshot = await usersRef.child(currentUser).once('value');
+        const userData = snapshot.val();
+        const requests = userData.friendRequests || [];
+        
+        let html = '';
+        if (requests.length === 0) {
+            html = '<p style="color:#94a3b8; text-align:center;">Нет запросов в друзья</p>';
+        } else {
+            for (const requester of requests) {
+                const requesterSnap = await usersRef.child(requester).once('value');
+                const requesterData = requesterSnap.val() || {};
+                html += `
+                    <div class="friend-request">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            ${renderAvatar(requesterData, requester, 40, true)}
+                            <div style="color:white; font-weight:bold;">${escapeHtml(requester)}</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="action-btn accept-friend" data-user="${requester}" style="background:#2ecc71; padding:6px 12px;">✓ Принять</button>
+                            <button class="action-btn decline-friend" data-user="${requester}" style="background:#c74b4b; padding:6px 12px;">✗ Отклонить</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        document.getElementById('friend-requests-list').innerHTML = html;
+        friendsModal.classList.remove('hidden');
+        
+        document.querySelectorAll('.accept-friend').forEach(btn => {
+            btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.user));
+        });
+        document.querySelectorAll('.decline-friend').forEach(btn => {
+            btn.addEventListener('click', () => declineFriendRequest(btn.dataset.user));
+        });
+    }
+
+    // ================== ВРЕМЯ ОНЛАЙН ==================
     async function startOnlineTracking() {
         if (!currentUser) return;
-        const now = Date.now();
-        onlineStartTime = now;
-        // При выходе или закрытии страницы сохраняем накопленное время
+        onlineStartTime = Date.now();
         window.addEventListener('beforeunload', () => saveOnlineTime());
-        // onDisconnect: при отключении сохраняем
         const onlineRefUser = onlineRef.child(currentUser);
         onlineRefUser.onDisconnect().set(null);
-        // Принудительно сохраняем каждую минуту
         setInterval(() => saveOnlineTime(), 60000);
     }
 
@@ -781,29 +977,37 @@ const firebaseConfig = {
         let totalTime = (user.totalOnlineTime || 0) + elapsed;
         await usersRef.child(currentUser).child('totalOnlineTime').set(totalTime);
         onlineStartTime = Date.now();
-        // Проверяем открытие рамок
         await checkAndUnlockFrames(totalTime);
     }
 
     async function checkAndUnlockFrames(totalTime) {
         const hours = totalTime / (1000 * 3600);
-        const frames = [];
-        if (hours >= 5) frames.push(1);
-        if (hours >= 24) frames.push(2);
-        if (hours >= 50) frames.push(3);
-        if (hours >= 100) frames.push(4);
-        const currentFrames = currentUserData.unlockedFrames || [];
-        const newFrames = frames.filter(f => !currentFrames.includes(f));
-        if (newFrames.length) {
-            await usersRef.child(currentUser).child('unlockedFrames').set([...currentFrames, ...newFrames]);
-            currentUserData.unlockedFrames = [...currentFrames, ...newFrames];
-            // Выдать последнюю открытую рамку как текущую
-            if (newFrames.includes(4)) await usersRef.child(currentUser).child('currentFrame').set(4);
-            else if (newFrames.includes(3)) await usersRef.child(currentUser).child('currentFrame').set(3);
-            else if (newFrames.includes(2)) await usersRef.child(currentUser).child('currentFrame').set(2);
-            else if (newFrames.includes(1)) await usersRef.child(currentUser).child('currentFrame').set(1);
-            addNotification(currentUser, { type: 'frame', text: `Вы открыли новую рамку #${newFrames[newFrames.length-1]}!` });
+        const frameRequirements = {
+            '10min': 10/60,
+            '100h': 100,
+            '500h': 500,
+            '1000h': 1000
+        };
+        const unlockedFrames = currentUserData.unlockedFrames || [];
+        let newFrames = [];
+        for (const [frame, req] of Object.entries(frameRequirements)) {
+            if (hours >= req && !unlockedFrames.includes(frame)) {
+                newFrames.push(frame);
+            }
         }
+        if (newFrames.length) {
+            const updatedFrames = [...unlockedFrames, ...newFrames];
+            await usersRef.child(currentUser).child('unlockedFrames').set(updatedFrames);
+            currentUserData.unlockedFrames = updatedFrames;
+            for (const frame of newFrames) {
+                await addNotification(currentUser, { type: 'frame', text: `Вы открыли новую рамку "${getFrameName(frame)}"!` });
+            }
+        }
+    }
+
+    function getFrameName(frameId) {
+        const names = { '10min': '🌟 10 минут', '100h': '💜 100 часов', '500h': '💖 500 часов', '1000h': '👑 1000 часов' };
+        return names[frameId] || frameId;
     }
 
     // ================== АВТОРИЗАЦИЯ ==================
@@ -819,10 +1023,13 @@ const firebaseConfig = {
             if (user.password !== password) { showAuthError('Неверный пароль'); return; }
             currentUser = username;
             currentUserData = user;
+            setCookie('kim_session', username, 30);
             localStorage.setItem('kim_current_user', username);
             authScreen.classList.add('hidden');
             chatApp.classList.remove('hidden');
-            currentUserSpan.innerHTML = renderDisplayName(username);
+            currentUserSpan.innerHTML = `<span>${escapeHtml(username)}${user.verified ? '<span class="verified-badge">✓</span>' : ''}</span>`;
+            currentUserSpan.style.cursor = 'pointer';
+            currentUserSpan.onclick = () => openUserProfile(username);
             onlineRef.child(username).set(true);
             onlineRef.child(username).onDisconnect().remove();
             startOnlineTracking();
@@ -830,17 +1037,13 @@ const firebaseConfig = {
             renderTab();
             subscribeToNotifications();
         } catch (e) {
-            showAuthError('Ошибка при входе: ' + e.message);
+            showAuthError('Ошибка: ' + e.message);
         }
     }
 
     async function register(username, password) {
         if (!checkFirebaseOrShowError()) return;
         if (!username || !password) { showAuthError('Заполните поля'); return; }
-        if (username === 'Alochnost') {
-            showAuthError('Имя Alochnost зарезервировано');
-            return;
-        }
         try {
             const snapshot = await usersRef.child(username).once('value');
             if (snapshot.exists()) { showAuthError('Имя уже занято'); return; }
@@ -857,12 +1060,14 @@ const firebaseConfig = {
                 totalOnlineTime: 0,
                 unlockedFrames: [],
                 currentFrame: null,
-                pinnedPost: null
+                pinnedPost: null,
+                privacySetting: 'all',
+                friendRequests: []
             };
             await usersRef.child(username).set(newUser);
             showAuthError('✅ Регистрация успешна! Теперь войдите.');
         } catch (e) {
-            showAuthError('Ошибка регистрации: ' + e.message);
+            showAuthError('Ошибка: ' + e.message);
         }
     }
 
@@ -876,6 +1081,7 @@ const firebaseConfig = {
             if (localStream) stopLocalVideo();
             if (peerConnection) peerConnection.close();
             currentUser = null;
+            deleteCookie('kim_session');
             localStorage.removeItem('kim_current_user');
             authScreen.classList.remove('hidden');
             chatApp.classList.add('hidden');
@@ -884,7 +1090,8 @@ const firebaseConfig = {
 
     // Автовход
     (async function() {
-        const savedUser = localStorage.getItem('kim_current_user');
+        const cookieUser = getCookie('kim_session');
+        const savedUser = cookieUser || localStorage.getItem('kim_current_user');
         if (savedUser) {
             try {
                 const snapshot = await usersRef.child(savedUser).once('value');
@@ -893,14 +1100,14 @@ const firebaseConfig = {
                     currentUserData = snapshot.val();
                     authScreen.classList.add('hidden');
                     chatApp.classList.remove('hidden');
-                    currentUserSpan.innerHTML = renderDisplayName(savedUser);
+                    currentUserSpan.innerHTML = `<span>${escapeHtml(savedUser)}${currentUserData.verified ? '<span class="verified-badge">✓</span>' : ''}</span>`;
+                    currentUserSpan.style.cursor = 'pointer';
+                    currentUserSpan.onclick = () => openUserProfile(savedUser);
                     onlineRef.child(savedUser).set(true);
                     onlineRef.child(savedUser).onDisconnect().remove();
                     startOnlineTracking();
                     renderTab();
                     subscribeToNotifications();
-                } else {
-                    localStorage.removeItem('kim_current_user');
                 }
             } catch (e) {
                 console.warn('Auto-login error:', e);
@@ -908,7 +1115,7 @@ const firebaseConfig = {
         }
     })();
 
-    // Создание админа с рамками
+    // Создание админа
     (async function() {
         try {
             const snapshot = await usersRef.child('Alochnost').once('value');
@@ -923,28 +1130,14 @@ const firebaseConfig = {
                     following: [],
                     verified: true,
                     isAdmin: true,
-                    totalOnlineTime: 100 * 3600 * 1000, // 100 часов
-                    unlockedFrames: [1,2,3,4],
-                    currentFrame: 4,
-                    pinnedPost: null
+                    totalOnlineTime: 1000 * 3600 * 1000,
+                    unlockedFrames: ['10min', '100h', '500h', '1000h'],
+                    currentFrame: '1000h',
+                    pinnedPost: null,
+                    privacySetting: 'all',
+                    friendRequests: []
                 };
                 await usersRef.child('Alochnost').set(adminData);
-                for (let i = 0; i < 59; i++) {
-                    await usersRef.child('Alochnost').child('followers').transaction(arr => {
-                        if (!arr) arr = [];
-                        arr.push('follower_' + i);
-                        return arr;
-                    });
-                }
-            } else {
-                // Обновляем данные админа, если нет рамок
-                const adminSnap = await usersRef.child('Alochnost').once('value');
-                const admin = adminSnap.val();
-                if (!admin.unlockedFrames || admin.unlockedFrames.length === 0) {
-                    await usersRef.child('Alochnost').child('unlockedFrames').set([1,2,3,4]);
-                    await usersRef.child('Alochnost').child('currentFrame').set(4);
-                    await usersRef.child('Alochnost').child('totalOnlineTime').set(100 * 3600 * 1000);
-                }
             }
         } catch (e) {
             console.warn('Admin creation error:', e);
@@ -999,13 +1192,8 @@ const firebaseConfig = {
             sorted.forEach(n => {
                 html += `
                     <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin-bottom:8px;">
-                        <div style="display:flex; gap:10px;">
-                            <span>${n.type === 'comment' ? '💬' : n.type === 'frame' ? '🏆' : '⭐'}</span>
-                            <div>
-                                <div>${n.text}</div>
-                                <div style="color:#94a3b8; font-size:0.8rem;">${timeAgo(n.timestamp)}</div>
-                            </div>
-                        </div>
+                        <div>${n.type === 'comment' ? '💬' : n.type === 'frame' ? '🏆' : n.type === 'friend' ? '👥' : '⭐'} ${n.text}</div>
+                        <div style="color:#94a3b8; font-size:0.8rem;">${timeAgo(n.timestamp)}</div>
                     </div>
                 `;
             });
@@ -1061,16 +1249,18 @@ const firebaseConfig = {
         if (dialogUsers.size === 0) {
             html += '<p style="color:#94a3b8; text-align:center;">Нет диалогов</p>';
         } else {
-            dialogUsers.forEach(other => {
+            for (const other of dialogUsers) {
+                const otherUserSnap = await usersRef.child(other).once('value');
+                const otherUser = otherUserSnap.val() || {};
                 html += `
                     <div class="dialog-item" data-other="${other}">
-                        ${renderAvatar(other, 48)}
+                        ${renderAvatar(otherUser, other, 48, true)}
                         <div style="flex:1; color:white;">
-                            <div style="font-weight:700;">${escapeHtml(other)}</div>
+                            <div style="font-weight:700;">${escapeHtml(other)}${otherUser.verified ? '<span class="verified-badge">✓</span>' : ''}</div>
                         </div>
                     </div>
                 `;
-            });
+            }
         }
         html += '</div>';
         dynamicContent.innerHTML = html;
@@ -1101,13 +1291,18 @@ const firebaseConfig = {
     }
 
     // ================== ЛИЧНЫЙ ЧАТ ==================
-    let pmMessagesListener = null;
-
     async function renderPrivateChat(other) {
+        // Проверяем, может ли пользователь писать
+        const canSend = await canSendMessage(other);
+        if (!canSend) {
+            alert(`Пользователь ${other} ограничил возможность писать вам. Вы не можете отправить сообщение.`);
+            renderDialogsList();
+            return;
+        }
+
         const key = [currentUser, other].sort().join('_');
         const messagesRef = dialogsRef.child(key);
 
-        // Отписываемся от предыдущего слушателя
         if (pmMessagesListener) pmMessagesListener();
         pmMessagesListener = null;
 
@@ -1119,9 +1314,11 @@ const firebaseConfig = {
             <button class="back-btn" id="back-pm" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:8px 16px; border-radius:40px; align-self:flex-start; margin-bottom:8px;">← Назад</button>
             <div class="messages-container" id="pm-messages">
         `;
-        sorted.forEach(msg => {
-            html += renderMessageHtml(msg, msg.sender === currentUser);
-        });
+        for (const msg of sorted) {
+            const senderSnap = await usersRef.child(msg.sender).once('value');
+            const senderData = senderSnap.val() || {};
+            html += renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
+        }
         html += `</div>`;
 
         html += `
@@ -1160,63 +1357,79 @@ const firebaseConfig = {
         recordBtn.addEventListener('touchend', stopPMRecording);
 
         document.getElementById('pm-game').addEventListener('click', () => {
-            const gameId = 'pm_' + Date.now() + '_' + Math.random();
+            const gameId = 'pm_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕНО
             const msg = { sender: currentUser, text: '🎮 Приглашение в игру', gameInvite: true, gameId, timestamp: Date.now() };
             messagesRef.push(msg);
-            // Создаём игровую сессию
             gamesRef.child(gameId).set({
                 board: ['','','','','','','','',''],
                 turn: 'X',
                 players: [currentUser, other],
                 status: 'waiting',
-                currentPlayer: currentUser
+                currentPlayer: currentUser,
+                gameId: gameId
             });
-            renderPrivateChat(other);
         });
 
         document.getElementById('pm-call').addEventListener('click', async () => {
-            const callId = 'call_' + Date.now() + '_' + Math.random();
+            const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2);
             const msg = { sender: currentUser, text: '📞 Звонок', callInvite: true, callId, timestamp: Date.now() };
             await messagesRef.push(msg);
             await startCall(callId, other);
         });
 
-        document.getElementById('pm-send').addEventListener('click', () => {
+        document.getElementById('pm-send').addEventListener('click', async () => {
             const input = document.getElementById('pm-text');
             const text = input.value.trim();
             if (!text) return;
+            const canSendNow = await canSendMessage(other);
+            if (!canSendNow) {
+                alert(`Пользователь ${other} ограничил возможность писать вам.`);
+                renderDialogsList();
+                return;
+            }
             messagesRef.push({ sender: currentUser, text, timestamp: Date.now() });
             input.value = '';
         });
 
-        // Подписываемся на новые сообщения
-        pmMessagesListener = messagesRef.limitToLast(1).on('child_added', (snapshot) => {
+        pmMessagesListener = messagesRef.limitToLast(1).on('child_added', async (snapshot) => {
             if (currentDialog === other && document.getElementById('pm-messages')) {
                 const msg = snapshot.val();
+                const senderSnap = await usersRef.child(msg.sender).once('value');
+                const senderData = senderSnap.val() || {};
                 const container = document.getElementById('pm-messages');
                 const msgDiv = document.createElement('div');
-                msgDiv.innerHTML = renderMessageHtml(msg, msg.sender === currentUser);
+                msgDiv.innerHTML = renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
                 container.appendChild(msgDiv);
                 container.scrollTop = container.scrollHeight;
             }
         });
     }
 
-    function renderMessageHtml(msg, isOut) {
-        let html = `<div class="message ${isOut ? 'out' : 'in'}">`;
-        if (!isOut) html += `<div class="sender">${escapeHtml(msg.sender)}${msg.senderVerified ? '<span class="verified-badge">✓</span>' : ''}</div>`;
-        if (msg.text) html += `<div>${escapeHtml(msg.text)}</div>`;
-        if (msg.imageUrl) html += `<img src="${msg.imageUrl}" class="message-image">`;
-        if (msg.audioUrl) html += `<audio controls src="${msg.audioUrl}" class="message-audio"></audio>`;
-        if (msg.gameInvite) {
-            html += `<div class="invite-message"><span>🎮 Приглашение в игру</span><button class="join-btn" data-gameid="${msg.gameId}">Присоединиться</button></div>`;
-        }
-        if (msg.callInvite) {
-            html += `<div class="invite-message"><span>📞 Звонок</span><button class="join-btn" data-callid="${msg.callId}">Присоединиться</button></div>`;
-        }
-        html += `<div style="font-size:0.7rem;">${timeAgo(msg.timestamp)}</div>`;
-        html += `</div>`;
-        return html;
+    function renderMessageHtml(msg, isOut, senderData, senderName) {
+        const frameClass = getUserFrameClass(senderData);
+        return `
+            <div class="message ${isOut ? 'out' : 'in'}">
+                <div class="message-avatar" onclick="openUserProfile('${senderName}')">
+                    <div class="avatar-wrapper ${frameClass}" style="width:40px; height:40px;">
+                        ${senderData?.avatar ? 
+                            `<img src="${senderData.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : 
+                            `<div style="width:100%; height:100%; background:linear-gradient(145deg,#475569,#1e293b); display:flex; align-items:center; justify-content:center; color:white; font-size:16px;">${senderName.charAt(0).toUpperCase()}</div>`
+                        }
+                    </div>
+                </div>
+                <div class="message-content">
+                    <div class="sender">
+                        ${escapeHtml(senderName)}${senderData?.verified ? '<span class="verified-badge">✓</span>' : ''}
+                    </div>
+                    ${msg.text ? `<div>${escapeHtml(msg.text)}</div>` : ''}
+                    ${msg.imageUrl ? `<img src="${msg.imageUrl}" class="message-image">` : ''}
+                    ${msg.audioUrl ? `<audio controls src="${msg.audioUrl}" class="message-audio"></audio>` : ''}
+                    ${msg.gameInvite ? `<div class="invite-message"><span>🎮 Приглашение в игру</span><button class="join-btn" data-gameid="${msg.gameId}">Присоединиться</button></div>` : ''}
+                    ${msg.callInvite ? `<div class="invite-message"><span>📞 Звонок</span><button class="join-btn" data-callid="${msg.callId}">Присоединиться</button></div>` : ''}
+                    <div style="font-size:0.7rem;">${timeAgo(msg.timestamp)}</div>
+                </div>
+            </div>
+        `;
     }
 
     function handlePMFile(e, other) {
@@ -1231,7 +1444,6 @@ const firebaseConfig = {
             if (type === 'image') msg.imageUrl = ev.target.result;
             else msg.audioUrl = ev.target.result;
             dialogsRef.child(key).push(msg);
-            renderPrivateChat(other);
         };
         reader.readAsDataURL(file);
     }
@@ -1251,7 +1463,6 @@ const firebaseConfig = {
                     const key = [currentUser, other].sort().join('_');
                     const msg = { sender: currentUser, audioUrl: ev.target.result, timestamp: Date.now() };
                     dialogsRef.child(key).push(msg);
-                    renderPrivateChat(other);
                     pmRecordingStream.getTracks().forEach(t => t.stop());
                 };
                 reader.readAsDataURL(blob);
@@ -1270,8 +1481,6 @@ const firebaseConfig = {
     }
 
     // ================== ОБЩИЙ ЧАТ ==================
-    let generalMessagesListener = null;
-
     async function renderGeneralChat() {
         if (generalMessagesListener) generalMessagesListener();
         generalMessagesListener = null;
@@ -1281,9 +1490,11 @@ const firebaseConfig = {
         const sorted = Object.values(messages).sort((a,b) => a.timestamp - b.timestamp);
 
         let html = `<div class="messages-container" id="general-messages">`;
-        sorted.forEach(msg => {
-            html += renderMessageHtml(msg, msg.sender === currentUser);
-        });
+        for (const msg of sorted) {
+            const senderSnap = await usersRef.child(msg.sender).once('value');
+            const senderData = senderSnap.val() || {};
+            html += renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
+        }
         html += `</div>`;
 
         html += `
@@ -1312,26 +1523,24 @@ const firebaseConfig = {
         recordBtn.addEventListener('touchend', stopGeneralRecording);
 
         document.getElementById('chat-game').addEventListener('click', () => {
-            const gameId = 'game_' + Date.now() + '_' + Math.random();
-            const msg = { sender: currentUser, timestamp: Date.now(), gameInvite: true, gameId };
-            generalMessagesRef.push(msg);
-            gamesRef.child(gameId).set({
-                board: ['','','','','','','','',''],
-                turn: 'X',
-                players: [currentUser, null],
-                status: 'waiting',
-                currentPlayer: currentUser
-            });
-            renderGeneralChat();
-        });
-
+            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕ
+			const msg = { sender: currentUser, timestamp: Date.now(), gameInvite: true, gameId };
+				generalMessagesRef.push(msg);
+				gamesRef.child(gameId).set({
+				board: ['','','','','','','','',''],
+				turn: 'X',
+				players: [currentUser, null],
+				status: 'waiting',
+				currentPlayer: currentUser
+    });
+    renderGeneralChat();
+});
         document.getElementById('chat-call').addEventListener('click', async () => {
-            const callId = 'call_' + Date.now() + '_' + Math.random();
-            const msg = { sender: currentUser, timestamp: Date.now(), callInvite: true, callId };
-            await generalMessagesRef.push(msg);
-            await startCall(callId, null);
-        });
-
+        const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕНО
+		const msg = { sender: currentUser, timestamp: Date.now(), callInvite: true, callId };
+		await generalMessagesRef.push(msg);
+		await startCall(callId, null);
+});
         document.getElementById('chat-send').addEventListener('click', () => {
             const input = document.getElementById('chat-text');
             const text = input.value.trim();
@@ -1340,12 +1549,14 @@ const firebaseConfig = {
             input.value = '';
         });
 
-        generalMessagesListener = generalMessagesRef.limitToLast(1).on('child_added', (snapshot) => {
+        generalMessagesListener = generalMessagesRef.limitToLast(1).on('child_added', async (snapshot) => {
             if (activeTab === 'chat' && document.getElementById('general-messages')) {
                 const msg = snapshot.val();
+                const senderSnap = await usersRef.child(msg.sender).once('value');
+                const senderData = senderSnap.val() || {};
                 const container = document.getElementById('general-messages');
                 const msgDiv = document.createElement('div');
-                msgDiv.innerHTML = renderMessageHtml(msg, msg.sender === currentUser);
+                msgDiv.innerHTML = renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
                 container.appendChild(msgDiv);
                 container.scrollTop = container.scrollHeight;
             }
@@ -1363,7 +1574,6 @@ const firebaseConfig = {
             if (type === 'image') msg.imageUrl = ev.target.result;
             else msg.audioUrl = ev.target.result;
             generalMessagesRef.push(msg);
-            renderGeneralChat();
         };
         reader.readAsDataURL(file);
     }
@@ -1382,7 +1592,6 @@ const firebaseConfig = {
                 reader.onload = (ev) => {
                     const msg = { sender: currentUser, audioUrl: ev.target.result, timestamp: Date.now() };
                     generalMessagesRef.push(msg);
-                    renderGeneralChat();
                     generalRecordingStream.getTracks().forEach(t => t.stop());
                 };
                 reader.readAsDataURL(blob);
@@ -1400,7 +1609,7 @@ const firebaseConfig = {
         }
     }
 
-    // ================== ЗВОНКИ (WebRTC) ==================
+    // ================== ЗВОНКИ ==================
     async function startCall(callId, targetUser) {
         if (peerConnection) peerConnection.close();
         currentCallId = callId;
@@ -1431,7 +1640,6 @@ const firebaseConfig = {
         };
 
         if (targetUser) {
-            // Исходящий звонок: создаём offer
             const offer = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offer);
             await callsRef.child(callId).set({
@@ -1441,15 +1649,13 @@ const firebaseConfig = {
                 status: 'pending'
             });
         } else {
-            // Общий чат: ждём, когда кто-то присоединится
-            callsRef.child(callId).set({
+            await callsRef.child(callId).set({
                 from: currentUser,
                 to: null,
                 status: 'waiting'
             });
         }
 
-        // Слушаем ответы
         const callRef = callsRef.child(callId);
         callRef.on('value', async (snap) => {
             const data = snap.val();
@@ -1457,14 +1663,12 @@ const firebaseConfig = {
             if (data.status === 'accepted' && data.answer && peerConnection.signalingState !== 'stable') {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             } else if (data.offer && data.to === currentUser && peerConnection.signalingState === 'stable') {
-                // Входящий звонок
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
                 await callRef.child('answer').set(answer);
                 await callRef.child('status').set('accepted');
             }
-            // ICE кандидаты
             if (data.candidates) {
                 Object.values(data.candidates).forEach(candidate => {
                     peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
@@ -1505,8 +1709,6 @@ const firebaseConfig = {
     document.getElementById('end-call-btn').addEventListener('click', endCall);
 
     // ================== ИГРЫ ==================
-    let currentGameListener = null;
-
     async function joinGame(gameId) {
         currentGameId = gameId;
         gameModal.classList.remove('hidden');
@@ -1516,7 +1718,6 @@ const firebaseConfig = {
         const game = snap.val();
         if (!game) return;
 
-        // Если второй игрок
         if (game.players[1] === null && game.players[0] !== currentUser) {
             await gameRef.child('players').child('1').set(currentUser);
             await gameRef.child('status').set('playing');
@@ -1554,7 +1755,6 @@ const firebaseConfig = {
                     turn: nextTurn,
                     currentPlayer: nextPlayer
                 });
-                // Проверка победы
                 if (checkWin(newBoard)) {
                     await gamesRef.child(currentGameId).child('status').set('over');
                     alert(`Победил ${game.turn === 'X' ? '✖' : '◯'}!`);
@@ -1592,21 +1792,18 @@ const firebaseConfig = {
     });
 
     // ================== ЛЕНТА ==================
-    let feedListener = null;
-
     async function renderFeed() {
         if (feedListener) feedListener();
         feedListener = postsRef.on('value', async (snap) => {
             const postsObj = snap.val() || {};
             let postsList = Object.values(postsObj).sort((a,b) => b.timestamp - a.timestamp);
-            // Закреплённые сверху
             const pinned = postsList.find(p => p.pinned && p.author === currentUser);
             if (pinned) {
                 postsList = [pinned, ...postsList.filter(p => p !== pinned)];
             }
             let html = `
                 <div class="post-card">
-                    <textarea id="new-post-text" placeholder="Что у вас нового? #хештеги" style="width:100%; padding:12px; border-radius:24px; background:rgba(255,255,255,0.1); color:white; border:none;"></textarea>
+                    <textarea id="new-post-text" placeholder="Что у вас нового? #хештеги" style="width:100%; padding:12px; border-radius:24px; background:rgba(255,255,255,0.1); color:white; border:none; min-height:80px;"></textarea>
                     <button id="create-post" class="action-btn" style="margin-top:8px;">➕ Опубликовать</button>
                 </div>
             `;
@@ -1615,36 +1812,40 @@ const firebaseConfig = {
                 const disliked = post.dislikes && post.dislikes[currentUser];
                 let content = escapeHtml(post.text);
                 content = content.replace(/#(\w+)/g, '<span class="hashtag">#$1</span>');
+                const authorSnap = await usersRef.child(post.author).once('value');
+                const authorData = authorSnap.val() || {};
                 html += `
                     <div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header" style="cursor:pointer;" data-author="${post.author}">
-                            ${renderAvatar(post.author, 45)}
+                        <div style="display:flex; gap:12px; align-items:center; cursor:pointer;" onclick="openUserProfile('${post.author}')">
+                            ${renderAvatar(authorData, post.author, 50, true)}
                             <div>
-                                <div class="post-author">${escapeHtml(post.author)}${post.authorVerified ? '<span class="verified-badge">✓</span>' : ''}</div>
-                                <div style="color:#94a3b8;">${timeAgo(post.timestamp)}</div>
-                                ${post.pinned ? '<div style="color:#fbbf24;">📌 Закреплено</div>' : ''}
+                                <div style="font-weight:bold; color:white;">${escapeHtml(post.author)}${authorData.verified ? '<span class="verified-badge">✓</span>' : ''}</div>
+                                <div style="color:#94a3b8; font-size:0.8rem;">${timeAgo(post.timestamp)}</div>
+                                ${post.pinned ? '<div style="color:#fbbf24; font-size:0.8rem;">📌 Закреплено</div>' : ''}
                             </div>
                         </div>
                         <div class="post-content" style="margin:12px 0;">${content}</div>
-                        <div class="post-actions" style="display:flex; gap:20px; margin-bottom:12px;">
-                            <span class="post-like" data-action="like" style="color:${liked?'#2ecc71':'#b3d0ff'};">👍 ${post.likes ? Object.keys(post.likes).length : 0}</span>
-                            <span class="post-dislike" data-action="dislike" style="color:${disliked?'#e67e22':'#b3d0ff'};">👎 ${post.dislikes ? Object.keys(post.dislikes).length : 0}</span>
-                            <button class="toggle-comments" data-postid="${post.id}">💬 Комментарии (${post.comments ? Object.keys(post.comments).length : 0})</button>
-                            ${post.author === currentUser ? `<button class="pin-post" data-postid="${post.id}">${post.pinned ? '📌 Открепить' : '📌 Закрепить'}</button>` : ''}
+                        <div style="display:flex; gap:20px; margin-bottom:12px;">
+                            <span class="post-like" data-action="like" style="color:${liked?'#2ecc71':'#b3d0ff'}; cursor:pointer;">👍 ${post.likes ? Object.keys(post.likes).length : 0}</span>
+                            <span class="post-dislike" data-action="dislike" style="color:${disliked?'#e67e22':'#b3d0ff'}; cursor:pointer;">👎 ${post.dislikes ? Object.keys(post.dislikes).length : 0}</span>
+                            <button class="toggle-comments" data-postid="${post.id}" style="background:none; border:none; color:#38bdf8; cursor:pointer;">💬 Комментарии (${post.comments ? Object.keys(post.comments).length : 0})</button>
+                            ${post.author === currentUser ? `<button class="pin-post" data-postid="${post.id}" style="background:none; border:none; color:#fbbf24; cursor:pointer;">${post.pinned ? '📌 Открепить' : '📌 Закрепить'}</button>` : ''}
                         </div>
                         <div id="comments-${post.id}" class="comments-section hidden">
                 `;
                 if (post.comments) {
                     const comments = Object.values(post.comments).sort((a,b) => a.timestamp - b.timestamp);
-                    comments.forEach(c => {
+                    for (const c of comments) {
+                        const commentAuthorSnap = await usersRef.child(c.author).once('value');
+                        const commentAuthorData = commentAuthorSnap.val() || {};
                         html += `
                             <div class="comment">
-                                <span class="comment-author">${escapeHtml(c.author)}${c.authorVerified ? '<span class="verified-badge">✓</span>' : ''}</span>
+                                <span class="comment-author" onclick="openUserProfile('${c.author}')">${escapeHtml(c.author)}${commentAuthorData.verified ? '<span class="verified-badge">✓</span>' : ''}</span>
                                 <span class="comment-text">${escapeHtml(c.text)}</span>
                                 <span class="comment-time">${timeAgo(c.timestamp)}</span>
                             </div>
                         `;
-                    });
+                    }
                 }
                 html += `
                         </div>
@@ -1661,9 +1862,8 @@ const firebaseConfig = {
                 const text = document.getElementById('new-post-text').value.trim();
                 if (!text) return;
                 const newPost = {
-                    id: Date.now() + '-' + Math.random(),
+                    id: Date.now() + '-' + Math.random().toString(36).substring(2), // ИСПРАВЛЕНО
                     author: currentUser,
-                    authorVerified: currentUserData.verified,
                     text,
                     timestamp: Date.now(),
                     likes: {},
@@ -1673,14 +1873,6 @@ const firebaseConfig = {
                 };
                 await postsRef.child(newPost.id).set(newPost);
                 document.getElementById('new-post-text').value = '';
-            });
-
-            document.querySelectorAll('.post-header').forEach(el => {
-                el.addEventListener('click', () => {
-                    const author = el.dataset.author;
-                    if (author === currentUser) { activeTab='profile'; document.querySelector('[data-tab="profile"]').classList.add('active'); renderProfile(currentUser,true); }
-                    else { viewingProfile = author; renderProfile(author, false); }
-                });
             });
 
             document.querySelectorAll('.post-like').forEach(btn => {
@@ -1705,7 +1897,7 @@ const firebaseConfig = {
                     const input = document.getElementById(`comment-${postId}`);
                     const text = input.value.trim();
                     if (!text) return;
-                    const comment = { author: currentUser, authorVerified: currentUserData.verified, text, timestamp: Date.now() };
+                    const comment = { author: currentUser, text, timestamp: Date.now() };
                     await postsRef.child(postId).child('comments').push(comment);
                     const postSnap = await postsRef.child(postId).once('value');
                     const post = postSnap.val();
@@ -1729,7 +1921,6 @@ const firebaseConfig = {
                     const post = postSnap.val();
                     if (post.author !== currentUser) return;
                     const newPinned = !post.pinned;
-                    // Убираем закрепление с других постов
                     if (newPinned) {
                         const allPosts = await postsRef.once('value');
                         allPosts.forEach(p => {
@@ -1753,31 +1944,29 @@ const firebaseConfig = {
         const postsSnap = await postsRef.orderByChild('author').equalTo(username).once('value');
         const postsCount = postsSnap.numChildren();
 
-        let frameClass = '';
-        if (user.currentFrame && user.unlockedFrames && user.unlockedFrames.includes(user.currentFrame)) {
-            const frames = {1:'frame-1',2:'frame-2',3:'frame-3',4:'frame-4'};
-            frameClass = frames[user.currentFrame];
-        }
+        const frameClass = getUserFrameClass(user);
 
         let html = `
             <div class="profile-card">
-                ${user.banner ? `<img src="${user.banner}" class="profile-banner" id="banner-img">` : `<div class="profile-banner" id="banner-placeholder" style="background:#334155; display:flex; align-items:center; justify-content:center; color:white;">Баннер</div>`}
-                <div id="avatar-wrapper" class="avatar-wrapper ${frameClass}" style="cursor:pointer;">
-                    ${user.avatar ? `<img src="${user.avatar}" class="avatar-large">` : `<div class="avatar-placeholder">${username.charAt(0).toUpperCase()}</div>`}
+                ${user.banner ? `<img src="${user.banner}" class="profile-banner" id="banner-img" style="cursor:pointer;">` : `<div class="profile-banner" id="banner-placeholder" style="background:#334155; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">Баннер</div>`}
+                <div style="display:flex; justify-content:center; margin-top:-45px;">
+                    <div class="avatar-wrapper ${frameClass}" style="width:90px; height:90px; cursor:pointer;" id="avatar-wrapper">
+                        ${user.avatar ? `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : `<div style="width:100%; height:100%; background:linear-gradient(145deg,#475569,#1e293b); display:flex; align-items:center; justify-content:center; color:white; font-size:2.5rem;">${username.charAt(0).toUpperCase()}</div>`}
+                    </div>
                 </div>
                 <div class="profile-name">${escapeHtml(username)}${user.verified ? '<span class="verified-badge">✓</span>' : ''}</div>
                 <div class="profile-bio">${escapeHtml(user.bio || 'Нет описания')}</div>
-                <div class="profile-stats" style="display:flex; gap:15px; margin:12px 0;">
-                    <div class="stat"><span class="stat-value">${postsCount}</span><br>постов</div>
-                    <div class="stat"><span class="stat-value">${user.friends ? user.friends.length : 0}</span><br>друзей</div>
-                    <div class="stat"><span class="stat-value">${user.followers ? user.followers.length : 0}</span><br>подписчиков</div>
-                    <div class="stat"><span class="stat-value">${Math.floor((user.totalOnlineTime || 0) / (1000*3600))}</span><br>часов</div>
+                <div class="profile-stats" style="display:flex; justify-content:space-around; margin:12px 0;">
+                    <div style="text-align:center;"><span class="stat-value">${postsCount}</span><br>постов</div>
+                    <div style="text-align:center;"><span class="stat-value">${user.friends ? user.friends.length : 0}</span><br>друзей</div>
+                    <div style="text-align:center;"><span class="stat-value">${user.followers ? user.followers.length : 0}</span><br>подписчиков</div>
+                    <div style="text-align:center;"><span class="stat-value">${Math.floor((user.totalOnlineTime || 0) / (1000*3600))}</span><br>часов</div>
                 </div>
         `;
         if (!isOwn) {
             const isFollowing = user.followers && user.followers.includes(currentUser);
             const isFriend = user.friends && user.friends.includes(currentUser);
-            html += `<div class="profile-actions">`;
+            html += `<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">`;
             if (!isFriend) html += `<button class="action-btn" id="add-friend">➕ В друзья</button>`;
             else html += `<button class="action-btn" id="remove-friend">❌ Удалить из друзей</button>`;
             if (!isFollowing) html += `<button class="action-btn" id="follow">🔔 Подписаться</button>`;
@@ -1788,7 +1977,7 @@ const firebaseConfig = {
             }
             html += `</div>`;
         } else {
-            html += `<div class="profile-actions">
+            html += `<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
                         <button class="action-btn" id="edit-profile">✏️ Редактировать</button>
                         <button class="action-btn" id="change-banner">🖼️ Сменить баннер</button>
                         <button class="action-btn" id="change-avatar">🖼️ Сменить аватар</button>
@@ -1802,15 +1991,7 @@ const firebaseConfig = {
         if (isOwn) {
             document.getElementById('change-avatar').addEventListener('click', () => uploadMedia('avatar'));
             document.getElementById('change-banner').addEventListener('click', () => uploadMedia('banner'));
-            document.getElementById('select-frame').addEventListener('click', () => {
-                const frames = user.unlockedFrames || [];
-                if (frames.length === 0) { alert('У вас нет открытых рамок'); return; }
-                const choice = prompt(`Доступные рамки: ${frames.join(', ')}. Введите номер:`, user.currentFrame || '');
-                if (choice && frames.includes(parseInt(choice))) {
-                    usersRef.child(currentUser).child('currentFrame').set(parseInt(choice));
-                    renderProfile(currentUser, true);
-                } else alert('Неверный номер');
-            });
+            document.getElementById('select-frame').addEventListener('click', () => openFrameSelector());
             document.getElementById('edit-profile').addEventListener('click', () => {
                 const newBio = prompt('Введите новое описание:', user.bio || '');
                 if (newBio !== null) {
@@ -1818,19 +1999,16 @@ const firebaseConfig = {
                     renderProfile(currentUser, true);
                 }
             });
+            if (document.getElementById('avatar-wrapper')) {
+                document.getElementById('avatar-wrapper').addEventListener('click', () => uploadMedia('avatar'));
+            }
+            if (document.getElementById('banner-img') || document.getElementById('banner-placeholder')) {
+                const bannerEl = document.getElementById('banner-img') || document.getElementById('banner-placeholder');
+                bannerEl.addEventListener('click', () => uploadMedia('banner'));
+            }
         } else {
             if (document.getElementById('add-friend')) document.getElementById('add-friend').addEventListener('click', async () => {
-                await usersRef.child(username).child('friends').transaction(arr => {
-                    if (!arr) arr = [];
-                    if (!arr.includes(currentUser)) arr.push(currentUser);
-                    return arr;
-                });
-                await usersRef.child(currentUser).child('friends').transaction(arr => {
-                    if (!arr) arr = [];
-                    if (!arr.includes(username)) arr.push(username);
-                    return arr;
-                });
-                renderProfile(username, false);
+                await sendFriendRequest(username);
             });
             if (document.getElementById('remove-friend')) document.getElementById('remove-friend').addEventListener('click', async () => {
                 await usersRef.child(username).child('friends').transaction(arr => {
@@ -1867,7 +2045,12 @@ const firebaseConfig = {
                 });
                 renderProfile(username, false);
             });
-            if (document.getElementById('send-message')) document.getElementById('send-message').addEventListener('click', () => {
+            if (document.getElementById('send-message')) document.getElementById('send-message').addEventListener('click', async () => {
+                const canSend = await canSendMessage(username);
+                if (!canSend) {
+                    alert(`Пользователь ${username} ограничил возможность писать вам.`);
+                    return;
+                }
                 currentDialog = username;
                 renderPrivateChat(username);
             });
@@ -1899,17 +2082,88 @@ const firebaseConfig = {
         input.click();
     }
 
+    async function openFrameSelector() {
+        const unlocked = currentUserData.unlockedFrames || [];
+        const current = currentUserData.currentFrame;
+        const frameOptions = [
+            { id: '10min', name: '🌟 10 минут онлайн', req: '10 минут' },
+            { id: '100h', name: '💜 100 часов онлайн', req: '100 часов' },
+            { id: '500h', name: '💖 500 часов онлайн', req: '500 часов' },
+            { id: '1000h', name: '👑 1000 часов онлайн', req: '1000 часов' }
+        ];
+        
+        let html = '';
+        for (const opt of frameOptions) {
+            const isUnlocked = unlocked.includes(opt.id);
+            const isActive = current === opt.id;
+            html += `
+                <div class="frame-option ${!isUnlocked ? 'locked' : ''}" data-frame="${opt.id}" ${!isUnlocked ? '' : 'style="cursor:pointer;"'}>
+                    <div class="avatar-wrapper ${isUnlocked ? opt.id === '10min' ? 'frame-10min' : opt.id === '100h' ? 'frame-100h' : opt.id === '500h' ? 'frame-500h' : 'frame-1000h' : ''}" style="width:60px; height:60px; margin:0 auto 10px auto;">
+                        <div style="width:100%; height:100%; background:linear-gradient(145deg,#475569,#1e293b); border-radius:50%;"></div>
+                    </div>
+                    <div style="color:white; font-weight:bold;">${opt.name}</div>
+                    <div style="color:#94a3b8; font-size:0.8rem;">Требуется: ${opt.req}</div>
+                    ${isActive ? '<div style="color:#38bdf8; margin-top:5px;">✓ Активна</div>' : ''}
+                    ${!isUnlocked ? '<div style="color:#f87171; margin-top:5px;">🔒 Заблокировано</div>' : ''}
+                </div>
+            `;
+        }
+        
+        document.getElementById('frame-options').innerHTML = html;
+        frameModal.classList.remove('hidden');
+        
+        document.querySelectorAll('.frame-option:not(.locked)').forEach(el => {
+            el.addEventListener('click', async () => {
+                const frameId = el.dataset.frame;
+                if (frameId) {
+                    await usersRef.child(currentUser).child('currentFrame').set(frameId);
+                    currentUserData.currentFrame = frameId;
+                    frameModal.classList.add('hidden');
+                    renderProfile(currentUser, true);
+                }
+            });
+        });
+    }
+
+    closeFrameModal.addEventListener('click', () => frameModal.classList.add('hidden'));
+
     // ================== НАСТРОЙКИ ==================
     function renderSettings() {
+        const privacySetting = currentUserData.privacySetting || 'all';
         dynamicContent.innerHTML = `
             <div class="settings-card">
-                <h3 style="color:white; margin-bottom:16px;">Тема</h3>
+                <h3 style="color:white; margin-bottom:16px;">🎨 Тема</h3>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
-                    <button class="theme-btn ${currentTheme==='dark'?'active':''}" data-theme="dark" style="background:${currentTheme==='dark'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">Тёмная</button>
-                    <button class="theme-btn ${currentTheme==='light'?'active':''}" data-theme="light" style="background:${currentTheme==='light'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">Светлая</button>
-                    <button class="theme-btn ${currentTheme==='gradient'?'active':''}" data-theme="gradient" style="background:${currentTheme==='gradient'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">Градиент</button>
+                    <button class="theme-btn ${currentTheme==='dark'?'active':''}" data-theme="dark" style="background:${currentTheme==='dark'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">🌙 Тёмная</button>
+                    <button class="theme-btn ${currentTheme==='light'?'active':''}" data-theme="light" style="background:${currentTheme==='light'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">☀️ Светлая</button>
+                    <button class="theme-btn ${currentTheme==='gradient'?'active':''}" data-theme="gradient" style="background:${currentTheme==='gradient'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">🎨 Градиент</button>
+                    <button class="theme-btn ${currentTheme==='cyberpunk'?'active':''}" data-theme="cyberpunk" style="background:${currentTheme==='cyberpunk'?'#38bdf8':'rgba(255,255,255,0.1)'}; border:none; color:white; padding:10px 18px; border-radius:40px;">🌈 Киберпанк</button>
                 </div>
-                <h3 style="color:white; margin-bottom:16px;">Безопасность</h3>
+                
+                <h3 style="color:white; margin-bottom:16px;">🔒 Приватность ЛС</h3>
+                <div id="privacy-settings" style="margin-bottom:20px;">
+                    <div class="privacy-option ${privacySetting === 'all' ? 'active' : ''}" data-privacy="all">
+                        <span>🌍 Все</span>
+                        <span style="color:#94a3b8;">Любой может написать</span>
+                    </div>
+                    <div class="privacy-option ${privacySetting === 'friends' ? 'active' : ''}" data-privacy="friends">
+                        <span>👥 Только друзья</span>
+                        <span style="color:#94a3b8;">Только те, кто в друзьях</span>
+                    </div>
+                    <div class="privacy-option ${privacySetting === 'mutual' ? 'active' : ''}" data-privacy="mutual">
+                        <span>🔄 Только взаимные</span>
+                        <span style="color:#94a3b8;">Взаимная подписка</span>
+                    </div>
+                    <div class="privacy-option ${privacySetting === 'followers' ? 'active' : ''}" data-privacy="followers">
+                        <span>📢 Только подписчики</span>
+                        <span style="color:#94a3b8;">Кто подписан на вас</span>
+                    </div>
+                </div>
+                
+                <h3 style="color:white; margin-bottom:16px;">👥 Друзья</h3>
+                <button id="show-friend-requests" class="action-btn" style="width:100%; margin-bottom:20px;">📨 Запросы в друзья</button>
+                
+                <h3 style="color:white; margin-bottom:16px;">🔐 Безопасность</h3>
                 <div style="background:rgba(255,255,255,0.05); border-radius:24px; padding:16px;">
                     <input type="password" id="old-password" class="auth-input" placeholder="Старый пароль">
                     <input type="password" id="new-password" class="auth-input" placeholder="Новый пароль">
@@ -1919,6 +2173,7 @@ const firebaseConfig = {
                 </div>
             </div>
         `;
+        
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 currentTheme = btn.dataset.theme;
@@ -1927,7 +2182,18 @@ const firebaseConfig = {
                 renderSettings();
             });
         });
-
+        
+        document.querySelectorAll('.privacy-option').forEach(opt => {
+            opt.addEventListener('click', async () => {
+                const privacy = opt.dataset.privacy;
+                await usersRef.child(currentUser).child('privacySetting').set(privacy);
+                currentUserData.privacySetting = privacy;
+                renderSettings();
+            });
+        });
+        
+        document.getElementById('show-friend-requests').addEventListener('click', () => showFriendRequests());
+        
         document.getElementById('change-password-btn').addEventListener('click', async () => {
             const old = document.getElementById('old-password').value.trim();
             const nw = document.getElementById('new-password').value.trim();
@@ -1944,7 +2210,8 @@ const firebaseConfig = {
         });
     }
 
-    // Обработка нажатий на кнопки приглашений (делегирование)
+    closeFriendsModal.addEventListener('click', () => friendsModal.classList.add('hidden'));
+
     dynamicContent.addEventListener('click', async (e) => {
         if (e.target.classList.contains('join-btn')) {
             const gameId = e.target.dataset.gameid;
