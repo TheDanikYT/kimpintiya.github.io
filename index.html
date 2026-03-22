@@ -2377,8 +2377,44 @@ if (closeFriendsModal) {
         });
     }
 
-    closeFriendsModal.addEventListener('click', () => friendsModal.classList.add('hidden'));
+    // Закрытие модального окна друзей
+    if (closeFriendsModal) {
+        closeFriendsModal.addEventListener('click', () => {
+            friendsModal.classList.add('hidden');
+        });
+    }
+    
+    // Закрытие модального окна рамок
+    if (closeFrameModal) {
+        closeFrameModal.addEventListener('click', () => {
+            frameModal.classList.add('hidden');
+        });
+    }
+    
+    // Закрытие модального окна уведомлений
+    if (closeNotifications) {
+        closeNotifications.addEventListener('click', () => {
+            notificationsModal.classList.add('hidden');
+        });
+    }
+    
+    // Закрытие игрового модального окна
+    const closeGame = document.getElementById('close-game');
+    if (closeGame) {
+        closeGame.addEventListener('click', () => {
+            gameModal.classList.add('hidden');
+        });
+    }
+    
+    // Закрытие модального окна звонков
+    const closeCallModal = document.getElementById('close-call-modal');
+    if (closeCallModal) {
+        closeCallModal.addEventListener('click', () => {
+            callModal.classList.add('hidden');
+        });
+    }
 
+    // Обработка нажатий на кнопки приглашений
     dynamicContent.addEventListener('click', async (e) => {
         if (e.target.classList.contains('join-btn')) {
             const gameId = e.target.dataset.gameid;
@@ -2391,6 +2427,7 @@ if (closeFriendsModal) {
             }
         }
     });
-	</script>
+    
+</script>
 </body>
 </html>
