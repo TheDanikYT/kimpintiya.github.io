@@ -1697,15 +1697,6 @@ async function renderGeneralChat() {
         }
     });
 }
-
-    renderGeneralChat();
-});
-        document.getElementById('chat-call').addEventListener('click', async () => {
-        const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕНО
-		const msg = { sender: currentUser, timestamp: Date.now(), callInvite: true, callId };
-		await generalMessagesRef.push(msg);
-		await startCall(callId, null);
-});
         document.getElementById('chat-send').addEventListener('click', () => {
             const input = document.getElementById('chat-text');
             const text = input.value.trim();
