@@ -1339,14 +1339,14 @@ async function showFriendRequests() {
         });
     });
 
-    function renderTab() {
-        if (!currentUser) return;
-        if (activeTab === 'dialogs') renderDialogsList();
-        else if (activeTab === 'feed') renderFeed();
-        else if (activeTab === 'chat') renderGeneralChat();
-        else if (activeTab === 'profile') renderProfile(currentUser, true);
-        else if (activeTab === 'settings') renderSettings();
-    }
+function renderTab() {
+    if (!currentUser) return;
+    if (activeTab === 'dialogs') renderDialogsList();
+    else if (activeTab === 'feed') renderFeed();  // ← эта строка должна быть
+    else if (activeTab === 'chat') renderGeneralChat();
+    else if (activeTab === 'profile') renderProfile(currentUser, true);
+    else if (activeTab === 'settings') renderSettings();
+}
 
     // ================== ДИАЛОГИ ==================
     async function renderDialogsList() {
@@ -1959,9 +1959,13 @@ if (closeFriendsModal) {
     });
 
     // ================== ЛЕНТА ==================
-    async function renderFeed() {
-        if (feedListener) feedListener();
-        feedListener = postsRef.on('value', async (snap) => {
+async function renderFeed() {
+    if (feedListener) feedListener();
+    feedListener = postsRef.on('value', async (snap) => {
+        if (!snap) {
+            console.warn('Нет данных от Firebase');
+            return;
+        }
             const postsObj = snap.val() || {};
             let postsList = Object.values(postsObj).sort((a,b) => b.timestamp - a.timestamp);
             const pinned = postsList.find(p => p.pinned && p.author === currentUser);
