@@ -1707,6 +1707,12 @@ closeFriendsModal.addEventListener('click', () => {
     friendsModal.classList.add('hidden');
 });
 
+if (closeFriendsModal) {
+    closeFriendsModal.addEventListener('click', () => {
+        friendsModal.classList.add('hidden');
+    });
+}
+
         document.getElementById('chat-send').addEventListener('click', () => {
             const input = document.getElementById('chat-text');
             const text = input.value.trim();
