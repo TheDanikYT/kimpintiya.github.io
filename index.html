@@ -1330,8 +1330,6 @@
                     <label for="pm-audio" class="circle-btn">🎵</label>
                     <input type="file" id="pm-audio" accept="audio/*" style="display:none;">
                     <button class="circle-btn" id="pm-record">🎙️</button>
-                    <button class="circle-btn" id="pm-game">🎮</button>
-                    <button class="circle-btn" id="pm-call">📞</button>
                     <button class="circle-btn" id="pm-profile">👤</button>
                     <button id="pm-send" class="circle-btn" style="background:#38bdf8;">➤</button>
                 </div>
@@ -1424,8 +1422,6 @@
                     ${msg.text ? `<div>${escapeHtml(msg.text)}</div>` : ''}
                     ${msg.imageUrl ? `<img src="${msg.imageUrl}" class="message-image">` : ''}
                     ${msg.audioUrl ? `<audio controls src="${msg.audioUrl}" class="message-audio"></audio>` : ''}
-                    ${msg.gameInvite ? `<div class="invite-message"><span>🎮 Приглашение в игру</span><button class="join-btn" data-gameid="${msg.gameId}">Присоединиться</button></div>` : ''}
-                    ${msg.callInvite ? `<div class="invite-message"><span>📞 Звонок</span><button class="join-btn" data-callid="${msg.callId}">Присоединиться</button></div>` : ''}
                     <div style="font-size:0.7rem;">${timeAgo(msg.timestamp)}</div>
                 </div>
             </div>
@@ -1506,8 +1502,6 @@
                     <label for="chat-audio" class="circle-btn">🎵</label>
                     <input type="file" id="chat-audio" accept="audio/*" style="display:none;">
                     <button class="circle-btn" id="chat-record">🎙️</button>
-                    <button class="circle-btn" id="chat-game">🎮</button>
-                    <button class="circle-btn" id="chat-call">📞</button>
                     <button id="chat-send" class="circle-btn" style="background:#38bdf8;">➤</button>
                 </div>
             </div>
