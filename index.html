@@ -1483,7 +1483,6 @@ async function showFriendRequests() {
     closeFriendsModal.addEventListener('click', () => {
         friendsModal.classList.add('hidden');
     });
-}
         document.getElementById('pm-game').addEventListener('click', () => {
             const gameId = 'pm_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕНО
             const msg = { sender: currentUser, text: '🎮 Приглашение в игру', gameInvite: true, gameId, timestamp: Date.now() };
@@ -1710,7 +1709,6 @@ if (closeFriendsModal) {
     closeFriendsModal.addEventListener('click', () => {
         friendsModal.classList.add('hidden');
     });
-}
         document.getElementById('chat-send').addEventListener('click', () => {
             const input = document.getElementById('chat-text');
             const text = input.value.trim();
