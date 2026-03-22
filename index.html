@@ -863,225 +863,225 @@
     }
 
     // ================== ЗАПРОСЫ В ДРУЗЬЯ ==================
-async function sendFriendRequest(toUser) {
-    if (toUser === currentUser) {
-        alert('Нельзя добавить себя в друзья');
-        return;
+    async function sendFriendRequest(toUser) {
+        if (toUser === currentUser) {
+            alert('Нельзя добавить себя в друзья');
+            return;
+        }
+        
+        const currentFriends = currentUserData.friends || [];
+        if (currentFriends.includes(toUser)) {
+            alert('Этот пользователь уже у вас в друзьях');
+            return;
+        }
+        
+        const existingRequests = currentUserData.sentFriendRequests || [];
+        if (existingRequests.includes(toUser)) {
+            alert('Запрос уже отправлен');
+            return;
+        }
+        
+        const toUserSnap = await usersRef.child(toUser).once('value');
+        const toUserData = toUserSnap.val();
+        if (!toUserData) {
+            alert('Пользователь не найден');
+            return;
+        }
+        
+        const incomingRequests = toUserData.incomingFriendRequests || [];
+        if (incomingRequests.includes(currentUser)) {
+            alert('Запрос уже существует');
+            return;
+        }
+        incomingRequests.push(currentUser);
+        await usersRef.child(toUser).child('incomingFriendRequests').set(incomingRequests);
+        
+        const sentRequests = currentUserData.sentFriendRequests || [];
+        sentRequests.push(toUser);
+        await usersRef.child(currentUser).child('sentFriendRequests').set(sentRequests);
+        currentUserData.sentFriendRequests = sentRequests;
+        
+        await addNotification(toUser, { type: 'friend', text: `${currentUser} хочет добавить вас в друзья!` });
+        
+        alert(`Запрос в друзья отправлен пользователю ${toUser}`);
+        
+        if (viewingProfile === toUser) {
+            renderProfile(toUser, false);
+        }
     }
-    
-    const currentFriends = currentUserData.friends || [];
-    if (currentFriends.includes(toUser)) {
-        alert('Этот пользователь уже у вас в друзьях');
-        return;
-    }
-    
-    const existingRequests = currentUserData.sentFriendRequests || [];
-    if (existingRequests.includes(toUser)) {
-        alert('Запрос уже отправлен');
-        return;
-    }
-    
-    const toUserSnap = await usersRef.child(toUser).once('value');
-    const toUserData = toUserSnap.val();
-    if (!toUserData) {
-        alert('Пользователь не найден');
-        return;
-    }
-    
-    const incomingRequests = toUserData.incomingFriendRequests || [];
-    if (incomingRequests.includes(currentUser)) {
-        alert('Запрос уже существует');
-        return;
-    }
-    incomingRequests.push(currentUser);
-    await usersRef.child(toUser).child('incomingFriendRequests').set(incomingRequests);
-    
-    const sentRequests = currentUserData.sentFriendRequests || [];
-    sentRequests.push(toUser);
-    await usersRef.child(currentUser).child('sentFriendRequests').set(sentRequests);
-    currentUserData.sentFriendRequests = sentRequests;
-    
-    await addNotification(toUser, { type: 'friend', text: `${currentUser} хочет добавить вас в друзья!` });
-    
-    alert(`Запрос в друзья отправлен пользователю ${toUser}`);
-    
-    if (viewingProfile === toUser) {
-        renderProfile(toUser, false);
-    }
-}
 
-async function acceptFriendRequest(fromUser) {
-    const currentSnap = await usersRef.child(currentUser).once('value');
-    const currentData = currentSnap.val();
-    
-    const fromSnap = await usersRef.child(fromUser).once('value');
-    const fromData = fromSnap.val();
-    
-    if (!currentData || !fromData) return;
-    
-    const incoming = currentData.incomingFriendRequests || [];
-    const newIncoming = incoming.filter(u => u !== fromUser);
-    await usersRef.child(currentUser).child('incomingFriendRequests').set(newIncoming);
-    
-    const sentFrom = fromData.sentFriendRequests || [];
-    const newSentFrom = sentFrom.filter(u => u !== currentUser);
-    await usersRef.child(fromUser).child('sentFriendRequests').set(newSentFrom);
-    
-    const currentFriends = currentData.friends || [];
-    if (!currentFriends.includes(fromUser)) {
-        currentFriends.push(fromUser);
-        await usersRef.child(currentUser).child('friends').set(currentFriends);
-    }
-    
-    const fromFriends = fromData.friends || [];
-    if (!fromFriends.includes(currentUser)) {
-        fromFriends.push(currentUser);
-        await usersRef.child(fromUser).child('friends').set(fromFriends);
-    }
-    
-    currentUserData.friends = currentFriends;
-    currentUserData.incomingFriendRequests = newIncoming;
-    
-    await addNotification(fromUser, { type: 'friend', text: `${currentUser} принял ваш запрос в друзья!` });
-    
-    alert(`Вы теперь друзья с ${fromUser}`);
-    
-    if (viewingProfile === fromUser) {
-        renderProfile(fromUser, false);
-    }
-    renderSettings();
-}
-
-async function declineFriendRequest(fromUser) {
-    const currentSnap = await usersRef.child(currentUser).once('value');
-    const currentData = currentSnap.val();
-    
-    const incoming = currentData.incomingFriendRequests || [];
-    const newIncoming = incoming.filter(u => u !== fromUser);
-    await usersRef.child(currentUser).child('incomingFriendRequests').set(newIncoming);
-    
-    const fromSnap = await usersRef.child(fromUser).once('value');
-    const fromData = fromSnap.val();
-    if (fromData) {
+    async function acceptFriendRequest(fromUser) {
+        const currentSnap = await usersRef.child(currentUser).once('value');
+        const currentData = currentSnap.val();
+        
+        const fromSnap = await usersRef.child(fromUser).once('value');
+        const fromData = fromSnap.val();
+        
+        if (!currentData || !fromData) return;
+        
+        const incoming = currentData.incomingFriendRequests || [];
+        const newIncoming = incoming.filter(u => u !== fromUser);
+        await usersRef.child(currentUser).child('incomingFriendRequests').set(newIncoming);
+        
         const sentFrom = fromData.sentFriendRequests || [];
         const newSentFrom = sentFrom.filter(u => u !== currentUser);
         await usersRef.child(fromUser).child('sentFriendRequests').set(newSentFrom);
+        
+        const currentFriends = currentData.friends || [];
+        if (!currentFriends.includes(fromUser)) {
+            currentFriends.push(fromUser);
+            await usersRef.child(currentUser).child('friends').set(currentFriends);
+        }
+        
+        const fromFriends = fromData.friends || [];
+        if (!fromFriends.includes(currentUser)) {
+            fromFriends.push(currentUser);
+            await usersRef.child(fromUser).child('friends').set(fromFriends);
+        }
+        
+        currentUserData.friends = currentFriends;
+        currentUserData.incomingFriendRequests = newIncoming;
+        
+        await addNotification(fromUser, { type: 'friend', text: `${currentUser} принял ваш запрос в друзья!` });
+        
+        alert(`Вы теперь друзья с ${fromUser}`);
+        
+        if (viewingProfile === fromUser) {
+            renderProfile(fromUser, false);
+        }
+        renderSettings();
     }
-    
-    currentUserData.incomingFriendRequests = newIncoming;
-    
-    alert(`Запрос от ${fromUser} отклонён`);
-    renderSettings();
-}
 
-async function cancelFriendRequest(toUser) {
-    const sentRequests = currentUserData.sentFriendRequests || [];
-    if (!sentRequests.includes(toUser)) return;
-    
-    const newSent = sentRequests.filter(u => u !== toUser);
-    await usersRef.child(currentUser).child('sentFriendRequests').set(newSent);
-    currentUserData.sentFriendRequests = newSent;
-    
-    const toSnap = await usersRef.child(toUser).once('value');
-    const toData = toSnap.val();
-    if (toData) {
-        const incoming = toData.incomingFriendRequests || [];
-        const newIncoming = incoming.filter(u => u !== currentUser);
-        await usersRef.child(toUser).child('incomingFriendRequests').set(newIncoming);
+    async function declineFriendRequest(fromUser) {
+        const currentSnap = await usersRef.child(currentUser).once('value');
+        const currentData = currentSnap.val();
+        
+        const incoming = currentData.incomingFriendRequests || [];
+        const newIncoming = incoming.filter(u => u !== fromUser);
+        await usersRef.child(currentUser).child('incomingFriendRequests').set(newIncoming);
+        
+        const fromSnap = await usersRef.child(fromUser).once('value');
+        const fromData = fromSnap.val();
+        if (fromData) {
+            const sentFrom = fromData.sentFriendRequests || [];
+            const newSentFrom = sentFrom.filter(u => u !== currentUser);
+            await usersRef.child(fromUser).child('sentFriendRequests').set(newSentFrom);
+        }
+        
+        currentUserData.incomingFriendRequests = newIncoming;
+        
+        alert(`Запрос от ${fromUser} отклонён`);
+        renderSettings();
     }
-	
-	async function removeFriend(friendName) {
-    if (!confirm(`Удалить ${friendName} из друзей?`)) return;
-    
-    const currentFriends = currentUserData.friends || [];
-    const newCurrentFriends = currentFriends.filter(f => f !== friendName);
-    await usersRef.child(currentUser).child('friends').set(newCurrentFriends);
-    currentUserData.friends = newCurrentFriends;
-    
-    const friendSnap = await usersRef.child(friendName).once('value');
-    const friendData = friendSnap.val();
-    if (friendData) {
-        const friendFriends = friendData.friends || [];
-        const newFriendFriends = friendFriends.filter(f => f !== currentUser);
-        await usersRef.child(friendName).child('friends').set(newFriendFriends);
-    }
-    
-    alert(`${friendName} удалён из друзей`);
-    
-    if (viewingProfile === friendName) {
-        renderProfile(friendName, false);
-    }
-}
-    
-    alert(`Запрос к ${toUser} отменён`);
-    
-    if (viewingProfile === toUser) {
-        renderProfile(toUser, false);
-    }
-}
 
-async function showFriendRequests() {
-    const snapshot = await usersRef.child(currentUser).once('value');
-    const userData = snapshot.val();
-    const incomingRequests = userData.incomingFriendRequests || [];
-    const sentRequests = userData.sentFriendRequests || [];
-    
-    let html = '<div style="margin-bottom:20px;"><h4 style="color:white;">📨 Входящие запросы</h4></div>';
-    
-    if (incomingRequests.length === 0) {
-        html += '<p style="color:#94a3b8; margin-bottom:20px;">Нет входящих запросов</p>';
-    } else {
-        for (const requester of incomingRequests) {
-            const requesterSnap = await usersRef.child(requester).once('value');
-            const requesterData = requesterSnap.val() || {};
-            html += `
-                <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        ${renderAvatar(requesterData, requester, 40, true)}
-                        <div style="color:white; font-weight:bold;">${escapeHtml(requester)}</div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="accept-friend" data-user="${requester}" style="background:#2ecc71; border:none; color:white; padding:6px 12px; border-radius:20px; cursor:pointer;">✓ Принять</button>
-                        <button class="decline-friend" data-user="${requester}" style="background:#c74b4b; border:none; color:white; padding:6px 12px; border-radius:20px; cursor:pointer;">✗ Отклонить</button>
-                    </div>
-                </div>
-            `;
+    async function cancelFriendRequest(toUser) {
+        const sentRequests = currentUserData.sentFriendRequests || [];
+        if (!sentRequests.includes(toUser)) return;
+        
+        const newSent = sentRequests.filter(u => u !== toUser);
+        await usersRef.child(currentUser).child('sentFriendRequests').set(newSent);
+        currentUserData.sentFriendRequests = newSent;
+        
+        const toSnap = await usersRef.child(toUser).once('value');
+        const toData = toSnap.val();
+        if (toData) {
+            const incoming = toData.incomingFriendRequests || [];
+            const newIncoming = incoming.filter(u => u !== currentUser);
+            await usersRef.child(toUser).child('incomingFriendRequests').set(newIncoming);
+        }
+        
+        alert(`Запрос к ${toUser} отменён`);
+        
+        if (viewingProfile === toUser) {
+            renderProfile(toUser, false);
         }
     }
     
-    html += '<div style="margin:20px 0;"><h4 style="color:white;">📤 Отправленные запросы</h4></div>';
-    
-    if (sentRequests.length === 0) {
-        html += '<p style="color:#94a3b8;">Нет отправленных запросов</p>';
-    } else {
-        for (const sent of sentRequests) {
-            const sentSnap = await usersRef.child(sent).once('value');
-            const sentData = sentSnap.val() || {};
-            html += `
-                <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        ${renderAvatar(sentData, sent, 40, true)}
-                        <div style="color:white; font-weight:bold;">${escapeHtml(sent)}</div>
-                    </div>
-                    <button class="cancel-friend" data-user="${sent}" style="background:#fbbf24; border:none; color:#0f172a; padding:6px 12px; border-radius:20px; cursor:pointer;">↩ Отменить</button>
-                </div>
-            `;
+    async function removeFriend(friendName) {
+        if (!confirm(`Удалить ${friendName} из друзей?`)) return;
+        
+        const currentFriends = currentUserData.friends || [];
+        const newCurrentFriends = currentFriends.filter(f => f !== friendName);
+        await usersRef.child(currentUser).child('friends').set(newCurrentFriends);
+        currentUserData.friends = newCurrentFriends;
+        
+        const friendSnap = await usersRef.child(friendName).once('value');
+        const friendData = friendSnap.val();
+        if (friendData) {
+            const friendFriends = friendData.friends || [];
+            const newFriendFriends = friendFriends.filter(f => f !== currentUser);
+            await usersRef.child(friendName).child('friends').set(newFriendFriends);
+        }
+        
+        alert(`${friendName} удалён из друзей`);
+        
+        if (viewingProfile === friendName) {
+            renderProfile(friendName, false);
         }
     }
-    
-    document.getElementById('friend-requests-list').innerHTML = html;
-    friendsModal.classList.remove('hidden');
-    
-    document.querySelectorAll('.accept-friend').forEach(btn => {
-        btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.user));
-    });
-    document.querySelectorAll('.decline-friend').forEach(btn => {
-        btn.addEventListener('click', () => declineFriendRequest(btn.dataset.user));
-    });
-    document.querySelectorAll('.cancel-friend').forEach(btn => {
-        btn.addEventListener('click', () => cancelFriendRequest(btn.dataset.user));
-    });
-}
+
+    async function showFriendRequests() {
+        const snapshot = await usersRef.child(currentUser).once('value');
+        const userData = snapshot.val();
+        const incomingRequests = userData.incomingFriendRequests || [];
+        const sentRequests = userData.sentFriendRequests || [];
+        
+        let html = '<div style="margin-bottom:20px;"><h4 style="color:white;">📨 Входящие запросы</h4></div>';
+        
+        if (incomingRequests.length === 0) {
+            html += '<p style="color:#94a3b8; margin-bottom:20px;">Нет входящих запросов</p>';
+        } else {
+            for (const requester of incomingRequests) {
+                const requesterSnap = await usersRef.child(requester).once('value');
+                const requesterData = requesterSnap.val() || {};
+                html += `
+                    <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            ${renderAvatar(requesterData, requester, 40, true)}
+                            <div style="color:white; font-weight:bold;">${escapeHtml(requester)}</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="accept-friend" data-user="${requester}" style="background:#2ecc71; border:none; color:white; padding:6px 12px; border-radius:20px; cursor:pointer;">✓ Принять</button>
+                            <button class="decline-friend" data-user="${requester}" style="background:#c74b4b; border:none; color:white; padding:6px 12px; border-radius:20px; cursor:pointer;">✗ Отклонить</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        html += '<div style="margin:20px 0;"><h4 style="color:white;">📤 Отправленные запросы</h4></div>';
+        
+        if (sentRequests.length === 0) {
+            html += '<p style="color:#94a3b8;">Нет отправленных запросов</p>';
+        } else {
+            for (const sent of sentRequests) {
+                const sentSnap = await usersRef.child(sent).once('value');
+                const sentData = sentSnap.val() || {};
+                html += `
+                    <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:12px; margin:8px 0; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            ${renderAvatar(sentData, sent, 40, true)}
+                            <div style="color:white; font-weight:bold;">${escapeHtml(sent)}</div>
+                        </div>
+                        <button class="cancel-friend" data-user="${sent}" style="background:#fbbf24; border:none; color:#0f172a; padding:6px 12px; border-radius:20px; cursor:pointer;">↩ Отменить</button>
+                    </div>
+                `;
+            }
+        }
+        
+        document.getElementById('friend-requests-list').innerHTML = html;
+        friendsModal.classList.remove('hidden');
+        
+        document.querySelectorAll('.accept-friend').forEach(btn => {
+            btn.addEventListener('click', () => acceptFriendRequest(btn.dataset.user));
+        });
+        document.querySelectorAll('.decline-friend').forEach(btn => {
+            btn.addEventListener('click', () => declineFriendRequest(btn.dataset.user));
+        });
+        document.querySelectorAll('.cancel-friend').forEach(btn => {
+            btn.addEventListener('click', () => cancelFriendRequest(btn.dataset.user));
+        });
+    }
 
     // ================== ВРЕМЯ ОНЛАЙН ==================
     async function startOnlineTracking() {
@@ -1187,7 +1187,9 @@ async function showFriendRequests() {
                 currentFrame: null,
                 pinnedPost: null,
                 privacySetting: 'all',
-                friendRequests: []
+                friendRequests: [],
+                sentFriendRequests: [],
+                incomingFriendRequests: []
             };
             await usersRef.child(username).set(newUser);
             showAuthError('✅ Регистрация успешна! Теперь войдите.');
@@ -1260,7 +1262,9 @@ async function showFriendRequests() {
                     currentFrame: '1000h',
                     pinnedPost: null,
                     privacySetting: 'all',
-                    friendRequests: []
+                    friendRequests: [],
+                    sentFriendRequests: [],
+                    incomingFriendRequests: []
                 };
                 await usersRef.child('Alochnost').set(adminData);
             }
@@ -1339,14 +1343,14 @@ async function showFriendRequests() {
         });
     });
 
-function renderTab() {
-    if (!currentUser) return;
-    if (activeTab === 'dialogs') renderDialogsList();
-    else if (activeTab === 'feed') renderFeed();  // ← эта строка должна быть
-    else if (activeTab === 'chat') renderGeneralChat();
-    else if (activeTab === 'profile') renderProfile(currentUser, true);
-    else if (activeTab === 'settings') renderSettings();
-}
+    function renderTab() {
+        if (!currentUser) return;
+        if (activeTab === 'dialogs') renderDialogsList();
+        else if (activeTab === 'feed') renderFeed();
+        else if (activeTab === 'chat') renderGeneralChat();
+        else if (activeTab === 'profile') renderProfile(currentUser, true);
+        else if (activeTab === 'settings') renderSettings();
+    }
 
     // ================== ДИАЛОГИ ==================
     async function renderDialogsList() {
@@ -1417,7 +1421,6 @@ function renderTab() {
 
     // ================== ЛИЧНЫЙ ЧАТ ==================
     async function renderPrivateChat(other) {
-        // Проверяем, может ли пользователь писать
         const canSend = await canSendMessage(other);
         if (!canSend) {
             alert(`Пользователь ${other} ограничил возможность писать вам. Вы не можете отправить сообщение.`);
@@ -1478,31 +1481,6 @@ function renderTab() {
         recordBtn.addEventListener('mousedown', () => startPMRecording(other));
         recordBtn.addEventListener('mouseup', stopPMRecording);
         recordBtn.addEventListener('touchend', stopPMRecording);
-		
-		if (closeFriendsModal) {
-    closeFriendsModal.addEventListener('click', () => {
-        friendsModal.classList.add('hidden');
-    });
-        document.getElementById('pm-game').addEventListener('click', () => {
-            const gameId = 'pm_' + Date.now() + '_' + Math.random().toString(36).substring(2); // ИСПРАВЛЕНО
-            const msg = { sender: currentUser, text: '🎮 Приглашение в игру', gameInvite: true, gameId, timestamp: Date.now() };
-            messagesRef.push(msg);
-            gamesRef.child(gameId).set({
-                board: ['','','','','','','','',''],
-                turn: 'X',
-                players: [currentUser, other],
-                status: 'waiting',
-                currentPlayer: currentUser,
-                gameId: gameId
-            });
-        });
-
-        document.getElementById('pm-call').addEventListener('click', async () => {
-            const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2);
-            const msg = { sender: currentUser, text: '📞 Звонок', callInvite: true, callId, timestamp: Date.now() };
-            await messagesRef.push(msg);
-            await startCall(callId, other);
-        });
 
         document.getElementById('pm-send').addEventListener('click', async () => {
             const input = document.getElementById('pm-text');
@@ -1606,116 +1584,85 @@ function renderTab() {
     }
 
     // ================== ОБЩИЙ ЧАТ ==================
-async function renderGeneralChat() {
-    if (generalMessagesListener) generalMessagesListener();
-    generalMessagesListener = null;
+    async function renderGeneralChat() {
+        if (generalMessagesListener) generalMessagesListener();
+        generalMessagesListener = null;
 
-    const snapshot = await generalMessagesRef.limitToLast(50).once('value');
-    const messages = snapshot.val() || {};
-    const sorted = Object.values(messages).sort((a,b) => a.timestamp - b.timestamp);
+        const snapshot = await generalMessagesRef.limitToLast(50).once('value');
+        const messages = snapshot.val() || {};
+        const sorted = Object.values(messages).sort((a,b) => a.timestamp - b.timestamp);
 
-    let html = `<div class="messages-container" id="general-messages">`;
-    for (const msg of sorted) {
-        const senderSnap = await usersRef.child(msg.sender).once('value');
-        const senderData = senderSnap.val() || {};
-        html += renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
-    }
-    html += `</div>`;
-
-    html += `
-        <div class="input-area">
-            <input type="text" id="chat-text" placeholder="Сообщение...">
-            <div class="action-btn-group">
-                <label for="chat-image" class="circle-btn">📷</label>
-                <input type="file" id="chat-image" accept="image/*,image/gif" style="display:none;">
-                <label for="chat-audio" class="circle-btn">🎵</label>
-                <input type="file" id="chat-audio" accept="audio/*" style="display:none;">
-                <button class="circle-btn" id="chat-record">🎙️</button>
-                <button class="circle-btn" id="chat-game">🎮</button>
-                <button class="circle-btn" id="chat-call">📞</button>
-                <button id="chat-send" class="circle-btn" style="background:#38bdf8;">➤</button>
-            </div>
-        </div>
-    `;
-    dynamicContent.innerHTML = html;
-
-    // Обработчики событий
-    document.getElementById('chat-image').addEventListener('change', (e) => handleGeneralFile(e));
-    document.getElementById('chat-audio').addEventListener('change', (e) => handleGeneralFile(e));
-
-    const recordBtn = document.getElementById('chat-record');
-    if (recordBtn) {
-        recordBtn.addEventListener('mousedown', startGeneralRecording);
-        recordBtn.addEventListener('mouseup', stopGeneralRecording);
-        recordBtn.addEventListener('touchend', stopGeneralRecording);
-    }
-
-    const gameBtn = document.getElementById('chat-game');
-    if (gameBtn) {
-        gameBtn.addEventListener('click', () => {
-            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substring(2);
-            const msg = { sender: currentUser, timestamp: Date.now(), gameInvite: true, gameId };
-            generalMessagesRef.push(msg);
-            gamesRef.child(gameId).set({
-                board: ['','','','','','','','',''],
-                turn: 'X',
-                players: [currentUser, null],
-                status: 'waiting',
-                currentPlayer: currentUser
-            });
-            renderGeneralChat();
-        });
-    }
-
-    const callBtn = document.getElementById('chat-call');
-    if (callBtn) {
-        callBtn.addEventListener('click', async () => {
-            const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2);
-            const msg = { sender: currentUser, timestamp: Date.now(), callInvite: true, callId };
-            await generalMessagesRef.push(msg);
-            await startCall(callId, null);
-        });
-    }
-
-    const sendBtn = document.getElementById('chat-send');
-    if (sendBtn) {
-        sendBtn.addEventListener('click', () => {
-            const input = document.getElementById('chat-text');
-            const text = input.value.trim();
-            if (!text) return;
-            generalMessagesRef.push({ sender: currentUser, text, timestamp: Date.now() });
-            input.value = '';
-        });
-    }
-
-    generalMessagesListener = generalMessagesRef.limitToLast(1).on('child_added', async (snapshot) => {
-        if (activeTab === 'chat' && document.getElementById('general-messages')) {
-            const msg = snapshot.val();
+        let html = `<div class="messages-container" id="general-messages">`;
+        for (const msg of sorted) {
             const senderSnap = await usersRef.child(msg.sender).once('value');
             const senderData = senderSnap.val() || {};
-            const container = document.getElementById('general-messages');
-            const msgDiv = document.createElement('div');
-            msgDiv.innerHTML = renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
-            container.appendChild(msgDiv);
-            container.scrollTop = container.scrollHeight;
+            html += renderMessageHtml(msg, msg.sender === currentUser, senderData, msg.sender);
         }
-    });
-}
-closeFriendsModal.addEventListener('click', () => {
-    friendsModal.classList.add('hidden');
-});
+        html += `</div>`;
 
-if (closeFriendsModal) {
-    closeFriendsModal.addEventListener('click', () => {
-        friendsModal.classList.add('hidden');
-    });
-        document.getElementById('chat-send').addEventListener('click', () => {
-            const input = document.getElementById('chat-text');
-            const text = input.value.trim();
-            if (!text) return;
-            generalMessagesRef.push({ sender: currentUser, text, timestamp: Date.now() });
-            input.value = '';
-        });
+        html += `
+            <div class="input-area">
+                <input type="text" id="chat-text" placeholder="Сообщение...">
+                <div class="action-btn-group">
+                    <label for="chat-image" class="circle-btn">📷</label>
+                    <input type="file" id="chat-image" accept="image/*,image/gif" style="display:none;">
+                    <label for="chat-audio" class="circle-btn">🎵</label>
+                    <input type="file" id="chat-audio" accept="audio/*" style="display:none;">
+                    <button class="circle-btn" id="chat-record">🎙️</button>
+                    <button class="circle-btn" id="chat-game">🎮</button>
+                    <button class="circle-btn" id="chat-call">📞</button>
+                    <button id="chat-send" class="circle-btn" style="background:#38bdf8;">➤</button>
+                </div>
+            </div>
+        `;
+        dynamicContent.innerHTML = html;
+
+        document.getElementById('chat-image').addEventListener('change', (e) => handleGeneralFile(e));
+        document.getElementById('chat-audio').addEventListener('change', (e) => handleGeneralFile(e));
+
+        const recordBtn = document.getElementById('chat-record');
+        if (recordBtn) {
+            recordBtn.addEventListener('mousedown', startGeneralRecording);
+            recordBtn.addEventListener('mouseup', stopGeneralRecording);
+            recordBtn.addEventListener('touchend', stopGeneralRecording);
+        }
+
+        const gameBtn = document.getElementById('chat-game');
+        if (gameBtn) {
+            gameBtn.addEventListener('click', () => {
+                const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+                const msg = { sender: currentUser, timestamp: Date.now(), gameInvite: true, gameId };
+                generalMessagesRef.push(msg);
+                gamesRef.child(gameId).set({
+                    board: ['','','','','','','','',''],
+                    turn: 'X',
+                    players: [currentUser, null],
+                    status: 'waiting',
+                    currentPlayer: currentUser
+                });
+            });
+        }
+
+        const callBtn = document.getElementById('chat-call');
+        if (callBtn) {
+            callBtn.addEventListener('click', async () => {
+                const callId = 'call_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+                const msg = { sender: currentUser, timestamp: Date.now(), callInvite: true, callId };
+                await generalMessagesRef.push(msg);
+                await startCall(callId, null);
+            });
+        }
+
+        const sendBtn = document.getElementById('chat-send');
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                const input = document.getElementById('chat-text');
+                const text = input.value.trim();
+                if (!text) return;
+                generalMessagesRef.push({ sender: currentUser, text, timestamp: Date.now() });
+                input.value = '';
+            });
+        }
 
         generalMessagesListener = generalMessagesRef.limitToLast(1).on('child_added', async (snapshot) => {
             if (activeTab === 'chat' && document.getElementById('general-messages')) {
@@ -1729,7 +1676,8 @@ if (closeFriendsModal) {
                 container.scrollTop = container.scrollHeight;
             }
         });
-		
+    }
+
     function handleGeneralFile(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1842,6 +1790,8 @@ if (closeFriendsModal) {
                 });
             }
         });
+        
+        callModal.classList.remove('hidden');
     }
 
     async function endCall() {
@@ -1860,22 +1810,15 @@ if (closeFriendsModal) {
         callModal.classList.add('hidden');
     }
 
-    document.getElementById('toggle-video').addEventListener('click', () => {
-        if (localStream) {
-            const track = localStream.getVideoTracks()[0];
-            if (track) track.enabled = !track.enabled;
-        }
-    });
-    document.getElementById('toggle-audio').addEventListener('click', () => {
-        if (localStream) {
-            const track = localStream.getAudioTracks()[0];
-            if (track) track.enabled = !track.enabled;
-        }
-    });
-    document.getElementById('close-call-modal').addEventListener('click', endCall);
-    document.getElementById('end-call-btn').addEventListener('click', endCall);
-
     // ================== ИГРЫ ==================
+    function checkWin(board) {
+        const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let l of lines) {
+            if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[1]] === board[l[2]]) return true;
+        }
+        return false;
+    }
+
     async function joinGame(gameId) {
         currentGameId = gameId;
         gameModal.classList.remove('hidden');
@@ -1933,39 +1876,14 @@ if (closeFriendsModal) {
         });
     }
 
-    function checkWin(board) {
-        const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-        for (let l of lines) {
-            if (board[l[0]] && board[l[0]] === board[l[1]] && board[l[1]] === board[l[2]]) return true;
-        }
-        return false;
-    }
-
-    document.getElementById('reset-game').addEventListener('click', async () => {
-        if (currentGameId) {
-            await gamesRef.child(currentGameId).update({
-                board: ['','','','','','','','',''],
-                turn: 'X',
-                currentPlayer: currentUser,
-                status: 'playing'
-            });
-        }
-    });
-    document.getElementById('close-game').addEventListener('click', () => {
-        gameModal.classList.add('hidden');
-        if (currentGameListener) currentGameListener();
-        currentGameListener = null;
-        currentGameId = null;
-    });
-
     // ================== ЛЕНТА ==================
-async function renderFeed() {
-    if (feedListener) feedListener();
-    feedListener = postsRef.on('value', async (snap) => {
-        if (!snap) {
-            console.warn('Нет данных от Firebase');
-            return;
-        }
+    async function renderFeed() {
+        if (feedListener) feedListener();
+        feedListener = postsRef.on('value', async (snap) => {
+            if (!snap) {
+                console.warn('Нет данных от Firebase');
+                return;
+            }
             const postsObj = snap.val() || {};
             let postsList = Object.values(postsObj).sort((a,b) => b.timestamp - a.timestamp);
             const pinned = postsList.find(p => p.pinned && p.author === currentUser);
@@ -2033,7 +1951,7 @@ async function renderFeed() {
                 const text = document.getElementById('new-post-text').value.trim();
                 if (!text) return;
                 const newPost = {
-                    id: Date.now() + '-' + Math.random().toString(36).substring(2), // ИСПРАВЛЕНО
+                    id: Date.now() + '-' + Math.random().toString(36).substring(2),
                     author: currentUser,
                     text,
                     timestamp: Date.now(),
@@ -2182,15 +2100,7 @@ async function renderFeed() {
                 await sendFriendRequest(username);
             });
             if (document.getElementById('remove-friend')) document.getElementById('remove-friend').addEventListener('click', async () => {
-                await usersRef.child(username).child('friends').transaction(arr => {
-                    if (arr) return arr.filter(u => u !== currentUser);
-                    return arr;
-                });
-                await usersRef.child(currentUser).child('friends').transaction(arr => {
-                    if (arr) return arr.filter(u => u !== username);
-                    return arr;
-                });
-                renderProfile(username, false);
+                await removeFriend(username);
             });
             if (document.getElementById('follow')) document.getElementById('follow').addEventListener('click', async () => {
                 await usersRef.child(username).child('followers').transaction(arr => {
@@ -2296,8 +2206,6 @@ async function renderFeed() {
         });
     }
 
-    closeFrameModal.addEventListener('click', () => frameModal.classList.add('hidden'));
-
     // ================== НАСТРОЙКИ ==================
     function renderSettings() {
         const privacySetting = currentUserData.privacySetting || 'all';
@@ -2381,28 +2289,25 @@ async function renderFeed() {
         });
     }
 
-    // Закрытие модального окна друзей
+    // Закрытие модальных окон
     if (closeFriendsModal) {
         closeFriendsModal.addEventListener('click', () => {
             friendsModal.classList.add('hidden');
         });
     }
     
-    // Закрытие модального окна рамок
     if (closeFrameModal) {
         closeFrameModal.addEventListener('click', () => {
             frameModal.classList.add('hidden');
         });
     }
     
-    // Закрытие модального окна уведомлений
     if (closeNotifications) {
         closeNotifications.addEventListener('click', () => {
             notificationsModal.classList.add('hidden');
         });
     }
     
-    // Закрытие игрового модального окна
     const closeGame = document.getElementById('close-game');
     if (closeGame) {
         closeGame.addEventListener('click', () => {
@@ -2410,11 +2315,49 @@ async function renderFeed() {
         });
     }
     
-    // Закрытие модального окна звонков
     const closeCallModal = document.getElementById('close-call-modal');
     if (closeCallModal) {
         closeCallModal.addEventListener('click', () => {
             callModal.classList.add('hidden');
+        });
+    }
+    
+    const endCallBtn = document.getElementById('end-call-btn');
+    if (endCallBtn) {
+        endCallBtn.addEventListener('click', endCall);
+    }
+    
+    const toggleVideo = document.getElementById('toggle-video');
+    if (toggleVideo) {
+        toggleVideo.addEventListener('click', () => {
+            if (localStream) {
+                const track = localStream.getVideoTracks()[0];
+                if (track) track.enabled = !track.enabled;
+            }
+        });
+    }
+    
+    const toggleAudio = document.getElementById('toggle-audio');
+    if (toggleAudio) {
+        toggleAudio.addEventListener('click', () => {
+            if (localStream) {
+                const track = localStream.getAudioTracks()[0];
+                if (track) track.enabled = !track.enabled;
+            }
+        });
+    }
+    
+    const resetGame = document.getElementById('reset-game');
+    if (resetGame) {
+        resetGame.addEventListener('click', async () => {
+            if (currentGameId) {
+                await gamesRef.child(currentGameId).update({
+                    board: ['','','','','','','','',''],
+                    turn: 'X',
+                    currentPlayer: currentUser,
+                    status: 'playing'
+                });
+            }
         });
     }
 
@@ -2427,14 +2370,9 @@ async function renderFeed() {
                 await joinGame(gameId);
             } else if (callId) {
                 await startCall(callId, null);
-                callModal.classList.remove('hidden');
             }
         }
     });
-
-}
-}
-	
-	</script>
+</script>
 </body>
 </html>
